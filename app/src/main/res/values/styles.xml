@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- 1. 定义弹出菜单的整体样式 -->
+	<style name="Widget.App.PopupMenu" parent="Widget.MaterialComponents.PopupMenu">
+		<!-- 引用你已有的圆角背景，解决顶点弧角问题[cite: 2, 3] -->
+		<item name="android:popupBackground">@drawable/bg_card_rounded</item>
+		<!-- 解决宽度适配：设置最小宽度，使其视觉上接近卡片横线的长度 -->
+		<item name="android:minWidth">280dp</item>
+		<!-- 弹出位置稍微向下偏移，避免遮挡点击的文字 -->
+		<item name="android:dropDownVerticalOffset">4dp</item>
+	</style>
+	
+	<!-- 2. (可选) 定义菜单内文字的样式 -->
+	<style name="TextAppearance.App.PopupMenu.Item" parent="TextAppearance.MaterialComponents.Subtitle1">
+		<item name="android:textColor">@color/text_main</item>
+		<item name="android:textSize">16sp</item>
+	</style>
+	
+	<!-- 3. 定义输入框样式（日间） -->
+	<style name="EditText" parent="Widget.AppCompat.EditText">
+		<item name="android:textColor">@color/text_main</item>
+		<item name="android:textColorHint">@color/hint_text</item>
+		<item name="android:backgroundTint">@color/input_focus</item>
+	</style>
+</resources>

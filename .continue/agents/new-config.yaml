@@ -1,0 +1,22 @@
+# Continue 配置文件 - 已针对 PhotoPalettePro 项目优化
+name: PhotoPalettePro-Dev
+version: 1.0.0
+schema: v1
+
+# 全局代理配置：解决 fetch failed 报错
+# 端口 7890 是你在代理设置中测试成功的端口
+requestOptions:
+  proxy: http://127.0.0.1:7890
+
+models:
+  - name: Gemini 1.5 Pro
+    provider: google
+    model: gemini-1.5-pro-latest
+    # 使用你刚才在 Google AI Studio 创建的密钥
+    apiKey: AIzaSyBCbWJTzm4oKk6Yg-f17kmx07IvkcoWNSc
+
+# 建议保留原有的上下文工具
+contextProviders:
+  - name: code
+  - name: docs
+  - name: terminal

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+	<!-- 深灰蓝色卡片背景，提供良好的层次感 -->
+	<solid android:color="#161B22" />
+	<!-- 细微灰蓝色边框，定义边界 -->
+	<stroke android:width="0.5dp" android:color="#30363D" />
+	<corners android:radius="16dp" />
+</shape>
+

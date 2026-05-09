@@ -1,0 +1,736 @@
+package com.example.photopalettepro;
+
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.photopalettepro.databinding.ActivityMainBinding;
+import com.example.photopalettepro.helper.ExifInfoManager;
+import com.example.photopalettepro.helper.ImageProcessingHelper;
+import com.example.photopalettepro.helper.ImageSaveHelper;
+import com.example.photopalettepro.helper.PopupMenuHelper;
+import com.example.photopalettepro.helper.PullRefreshHelper;
+import com.example.photopalettepro.helper.TitleLongPressHelper;
+import com.example.photopalettepro.helper.UIInteractionHelper;
+
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    private ActivityMainBinding binding;
+    private Bitmap sourceBitmap;
+    private Uri currentImageUri;
+    private final ExifInfoManager exifInfoManager = new ExifInfoManager();
+    
+    // 助手类
+    private TitleLongPressHelper titleLongPressHelper;
+    private PullRefreshHelper pullRefreshHelper;
+    private ImageSaveHelper imageSaveHelper;
+
+    // 图片选择 Launcher
+    private final ActivityResultLauncher<String> pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    currentImageUri = uri;
+                    loadSourceImage(uri);
+                }
+            }
+    );
+
+    private void checkPrivacyAgreement() {
+        SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
+        boolean isAgreed = prefs.getBoolean("privacy_agreed", false);
+
+        if (!isAgreed) {
+            showPrivacyDialog();
+        }
+    }
+
+    private void showPrivacyDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_privacy, null);
+        builder.setView(dialogView);
+        builder.setCancelable(false); // 强制点击按钮
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialogView.findViewById(R.id.btnAgree).setOnClickListener(v -> {
+            // 保存同意状态
+            getSharedPreferences("app_settings", MODE_PRIVATE)
+                    .edit().putBoolean("privacy_agreed", true).apply();
+            dialog.dismiss();
+            // 此时再去检查权限或初始化应用逻辑
+        });
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        // 初始化图片保存助手
+        imageSaveHelper = new ImageSaveHelper(this, new ImageSaveHelper.SaveCallback() {
+            @Override
+            public void onSuccess(String message) {
+                showToast(message);
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                showToast(errorMessage);
+            }
+        });
+
+        // UI 交互初始化
+        initializeUI();
+
+        // 业务逻辑初始化
+        initializeListeners();
+    }
+
+    /**
+     * UI 初始化
+     */
+    private void initializeUI() {
+        // 预览容器圆角裁剪
+        UIInteractionHelper.setupPreviewContainerClipping(binding.previewContainer);
+
+        // 按钮按压动画
+        binding.getRoot().post(() -> {
+            UIInteractionHelper.applyPressAnimationBatch(
+                    binding.btnGeneratePreview,
+                    binding.btnImport,
+                    binding.btnExport,
+                    binding.containerSelectMode,
+                    binding.containerSelectStyle
+            );
+        });
+
+        // 标题长按助手
+        titleLongPressHelper = new TitleLongPressHelper(this, binding.tvAppTitle);
+        titleLongPressHelper.setup();
+
+        // 下拉刷新助手
+        pullRefreshHelper = new PullRefreshHelper(
+                binding.swipeRefreshLayout,
+                binding.scrollView,
+                this,
+                new PullRefreshHelper.RefreshCallback() {
+                    @Override
+                    public void onRefresh() {
+                        processAndRender();
+                    }
+
+                    @Override
+                    public boolean canRefresh() {
+                        return sourceBitmap != null;
+                    }
+                }
+        );
+        pullRefreshHelper.setup();
+    }
+
+    /**
+     * 功能监听初始化
+     */
+    private void initializeListeners() {
+        // 生成预览
+        binding.btnGeneratePreview.setOnClickListener(v -> {
+            if (sourceBitmap != null) {
+                processAndRender();
+            } else {
+                showToast("请先导入照片");
+            }
+        });
+
+        // 导入照片
+        binding.btnImport.setOnClickListener(v -> {
+            try {
+                pickImageLauncher.launch("image/*");
+            } catch (Exception e) {
+                showToast("无法打开系统相册");
+            }
+        });
+
+        // 导出海报
+        binding.btnExport.setOnClickListener(v -> {
+            if (sourceBitmap != null) {
+                exportPoster();
+            } else {
+                showToast("请先导入照片");
+            }
+        });
+
+        // 渲染模式选择
+        binding.containerSelectMode.setOnClickListener(v -> {
+            String[] options = {"默认渲染", "取反差色", "突出原色"};
+            new PopupMenuHelper(this, v, options, selectedTitle -> {
+                binding.tvCurrentMode.setText(selectedTitle);
+                if (sourceBitmap != null) processAndRender();
+            }).show();
+        });
+
+        // 排列方式选择
+        binding.containerSelectStyle.setOnClickListener(v -> {
+            String[] options = {"默认格式", "马赛克化"};
+            new PopupMenuHelper(this, v, options, selectedTitle -> {
+                binding.tvCurrentStyle.setText(selectedTitle);
+                if (sourceBitmap != null) processAndRender();
+            }).show();
+        });
+    }
+
+    /**
+     * 初始化下拉刷新：实现 B 部分随下拉位移的“物理拉伸感”
+     */
+    private void initSwipeRefresh() {
+        // 1. 设置刷新圆圈的颜色
+        binding.swipeRefreshLayout.setColorSchemeColors(
+                ContextCompat.getColor(this, R.color.primary_blue)
+        );
+
+        // 2. 配置圆圈的弹出位置（解决 A 和 B 之间圆圈出现的物理距离）
+        binding.swipeRefreshLayout.post(() -> {
+            // 这里的 64dp 是圆圈最终悬停（刷新时）的位置
+            int end = (int) TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 64, getResources().getDisplayMetrics());
+            // 起始点设为 0，即从预览区底部边缘开始掉落
+            binding.swipeRefreshLayout.setProgressViewOffset(true, 0, end);
+        });
+
+        // 3. 核心：监听滑动进度，带动底部的 NestedScrollView (B部分) 一起位移
+        // 这样当圆圈下拉时，下方的滑块会同步向下移动，产生拉开的效果
+        binding.swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> {
+            // 当用户正在下拉且还未进入刷新状态时
+            if (binding.swipeRefreshLayout.isRefreshing()) return false;
+
+            // 获取当前下拉的进度 (0.0 到 1.0+)
+            // 虽然原生没有直接暴露，但我们可以通过监听 NestedScrollView 的位移来辅助
+            return false;
+        });
+
+        // 更加简单粗暴且有效的“跟手”位移方案：使用 OnTouchListener 辅助
+        // 这种方式能完美模拟出 B 部分被圆圈“推着走”的感觉
+        binding.scrollView.setOnTouchListener(new View.OnTouchListener() {
+            private float initialY = 0;
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (binding.swipeRefreshLayout.isRefreshing()) return false;
+
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_MOVE:
+                        // 如果 ScrollView 已经在顶部，开始计算位移
+                        if (!v.canScrollVertically(-1)) {
+                            // 这里的计算可以根据 SwipeRefreshLayout 的内部偏移来处理
+                            // 为了保证性能，我们可以直接让 B 部分产生一个阻尼位移
+                            float offset = event.getY() - initialY;
+                            if (offset > 0) {
+                                // 阻尼系数 0.5，让滑动更具有质感
+                                binding.scrollView.setTranslationY(offset * 0.5f);
+                            }
+                        }
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        // 手指抬起，B 部分弹回原位
+                        binding.scrollView.animate()
+                                .translationY(0)
+                                .setDuration(300)
+                                .setInterpolator(new OvershootInterpolator())
+                                .start();
+                        initialY = 0;
+                        break;
+                    case MotionEvent.ACTION_DOWN:
+                        initialY = event.getY();
+                        break;
+                }
+                return false;
+            }
+        });
+
+        // 4. 触发刷新的逻辑
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
+            if (sourceBitmap != null) {
+                // 保持位移状态直到刷新完成
+                processAndRender();
+                new Handler().postDelayed(() -> {
+                    binding.swipeRefreshLayout.setRefreshing(false);
+                }, 1000);
+            } else {
+                showToast("请先导入照片");
+                binding.swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void initClickListeners() {
+        binding.btnImport.setOnClickListener(v -> {
+            try {
+                pickImageLauncher.launch("image/*");
+            } catch (Exception e) {
+                showToast("无法打开系统相册");
+            }
+        });
+
+        binding.btnGeneratePreview.setOnClickListener(v -> {
+            if (sourceBitmap != null) {
+                processAndRender();
+            } else {
+                showToast("请先导入照片");
+            }
+        });
+
+        binding.btnExport.setOnClickListener(v -> {
+            if (sourceBitmap != null) {
+                exportPoster();
+            } else {
+                showToast("请先导入照片");
+            }
+        });
+    }
+
+    private void setupNewSelectors() {
+        binding.containerSelectMode.setOnClickListener(v -> {
+            String[] options = {"默认渲染", "取反差色", "突出原色"};
+            showCustomPopup(v, options, selectedTitle -> {
+                binding.tvCurrentMode.setText(selectedTitle);
+                if (sourceBitmap != null) processAndRender();
+            });
+        });
+
+        binding.containerSelectStyle.setOnClickListener(v -> {
+            String[] options = {"默认格式", "马赛克化"};
+            showCustomPopup(v, options, selectedTitle -> {
+                binding.tvCurrentStyle.setText(selectedTitle);
+                if (sourceBitmap != null) processAndRender();
+            });
+        });
+
+        applyPressAnimation(binding.containerSelectMode);
+        applyPressAnimation(binding.containerSelectStyle);
+    }
+
+    private void showCustomPopup(View anchor, String[] items, PopupSelectListener listener) {
+        ListPopupWindow listPopupWindow = new ListPopupWindow(this);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_list_item_1, items);
+        listPopupWindow.setAdapter(adapter);
+
+        listPopupWindow.setAnchorView(anchor);
+        listPopupWindow.setWidth(anchor.getWidth()); // 强制全宽
+        listPopupWindow.setDropDownGravity(android.view.Gravity.START);
+        listPopupWindow.setHorizontalOffset(0);
+        listPopupWindow.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.bg_card_rounded));
+        listPopupWindow.setModal(true);
+
+        listPopupWindow.setOnItemClickListener((parent, view, position, id) -> {
+            listener.onSelected(items[position]);
+            listPopupWindow.dismiss();
+        });
+        listPopupWindow.show();
+    }
+
+    interface PopupSelectListener {
+        void onSelected(String title);
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupVisualInteractions() {
+        applyPressAnimation(binding.btnGeneratePreview);
+        applyPressAnimation(binding.btnImport);
+        applyPressAnimation(binding.btnExport);
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void applyPressAnimation(View v) {
+        v.setOnTouchListener((view, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    view.animate().scaleX(0.96f).scaleY(0.96f).setDuration(100).start();
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(250)
+                            .setInterpolator(new OvershootInterpolator()).start();
+                    break;
+            }
+            return false;
+        });
+    }
+
+    private void generatePoster() {
+        if (sourceBitmap == null) {
+            showToast("请先导入照片");
+            return;
+        }
+
+        try {
+            // 1. 从界面获取最新的信息（使用统一的字段名 s, f, iso）
+            currentExifInfo.put("s", binding.etShutter.getText().toString());
+            currentExifInfo.put("f", binding.etAperture.getText().toString());
+            currentExifInfo.put("iso", binding.etIso.getText().toString());
+
+            // 获取水印开关状态和内容
+            String sign = binding.etSign.getText().toString();
+            // 假设您的 Switch ID 是 switchAddWatermark
+            boolean isWatermarkEnabled = binding.switchAddWatermark.isChecked();
+
+            currentExifInfo.put("sign", sign);
+            currentExifInfo.put("show_watermark", String.valueOf(isWatermarkEnabled));
+
+            // 2. 提取颜色（使用您现有的 ColorExtractor）
+            // 这里的 "默认" 可以根据您的下拉菜单动态获取
+            List<Integer> palette = ColorExtractor.getPaletteByMode(sourceBitmap, "默认");
+
+            // 3. 调用渲染器生成 4K 海报
+            Bitmap result = PosterRenderer.render(this, sourceBitmap, palette, currentExifInfo, "默认");
+
+            // 4. 重要：为了防止 "Canvas: trying to draw too large bitmap" 闪退
+            // 渲染出来的 result 是 4K 图，不能直接给 ImageView，需要生成预览缩略图
+            Bitmap previewDisplay = Bitmap.createScaledBitmap(result, result.getWidth() / 4, result.getHeight() / 4, true);
+
+            binding.imgPreview.setImageBitmap(previewDisplay);
+            showToast("渲染完成");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showToast("生成预览失败: " + e.getMessage());
+        }
+    }
+
+    private void loadSourceImage(Uri uri) {
+        try {
+            // 1. 预读取尺寸信息
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(getContentResolver().openInputStream(uri), null, options);
+
+            int w = options.outWidth;
+            int h = options.outHeight;
+            long totalPixels = (long) w * h;
+
+            // 2. 加载用于【分析和导出】的高清图 (sourceBitmap)
+            // 即使是 50MP，这里计算后的采样率会确保它在内存安全范围内
+            options.inJustDecodeBounds = false;
+            options.inMutable = true;
+            options.inSampleSize = calculateInSampleSize(options, 4000, 4000);
+            sourceBitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri), null, options);
+
+            if (sourceBitmap != null) {
+                // --- 核心优化：生成专门用于预览的“轻量图” ---
+                // 限制预览图长边为 2000px，防止 Canvas 绘制过载
+                int previewSampleSize = calculateInSampleSize(options, 2000, 2000);
+                Bitmap previewBitmap;
+
+                if (previewSampleSize <= 1) {
+                    // 如果原图本身就不大，直接复用
+                    previewBitmap = sourceBitmap;
+                } else {
+                    // 如果原图很大，创建一个小比例的副本用于显示
+                    BitmapFactory.Options previewOptions = new BitmapFactory.Options();
+                    previewOptions.inSampleSize = previewSampleSize;
+                    previewBitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri), null, previewOptions);
+                }
+
+                // UI 界面只显示轻量图，绝对不会报 Canvas too large
+                binding.imgPreview.setImageBitmap(previewBitmap);
+                if (binding.imgPreviewBlur != null) {
+                    binding.imgPreviewBlur.setImageBitmap(previewBitmap);
+                }
+
+                binding.tvEmptyHint.setVisibility(View.GONE);
+                autoFillExif(uri);
+
+                if (totalPixels > 40000000) {
+                    showToast("高清底片已就绪，已优化预览显示");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showToast("图片处理异常");
+        }
+    }
+
+    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // 原始图片的宽高
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // 计算最大的 2 的幂指数值作为 inSampleSize
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+        return inSampleSize;
+    }
+
+    // 在 MainActivity 的相关位置（如生成海报预览的点击事件里）更新参数获取逻辑
+    private Map<String, String> getFinalInfoMap() {
+        Map<String, String> info = currentExifInfo; // 假设这是你 autoFillExif 得到的 Map
+
+        // 获取水印内容
+        String sign = binding.etSign.getText().toString();
+        // 获取是否开启水印的状态
+        boolean isWatermarkEnabled = binding.switchAddWatermark.isChecked();
+
+        info.put("sign", sign);
+        // 传入一个标识位告诉渲染器是否要画水印
+        info.put("show_watermark", String.valueOf(isWatermarkEnabled));
+
+        return info;
+    }
+
+    private void autoFillExif(Uri uri) {
+        currentExifInfo = ExifUtil.getPhotoInfo(this, uri);
+
+        // 确保 currentExifInfo 不为 null，防止 getOrDefault 崩溃
+        if (currentExifInfo == null) {
+            currentExifInfo = new java.util.HashMap<>();
+        }
+
+        binding.etDevice.setText(currentExifInfo.getOrDefault("device", ""));
+        binding.etLens.setText(currentExifInfo.getOrDefault("lens", ""));
+        binding.etShutter.setText(currentExifInfo.getOrDefault("s", ""));
+        binding.etAperture.setText(currentExifInfo.getOrDefault("f", ""));
+        binding.etIso.setText(currentExifInfo.getOrDefault("iso", ""));
+    }
+
+    private void updateInfoFromUI() {
+        if (currentExifInfo == null) return;
+        currentExifInfo.put("device", binding.etDevice.getText().toString());
+        currentExifInfo.put("lens", binding.etLens.getText().toString());
+        currentExifInfo.put("s", binding.etShutter.getText().toString());
+        currentExifInfo.put("f", binding.etAperture.getText().toString());
+        currentExifInfo.put("iso", binding.etIso.getText().toString());
+        // 关键一步：把水印内容放进 Map
+        currentExifInfo.put("sign", binding.etSign.getText().toString());
+        // 关键修复：同时更新水印开关状态
+        boolean isWatermarkEnabled = binding.switchAddWatermark.isChecked();
+        currentExifInfo.put("show_watermark", String.valueOf(isWatermarkEnabled));
+    }
+
+    private void processAndRender() {
+        if (sourceBitmap == null) return;
+        updateInfoFromUI();
+        String selectedMode = binding.tvCurrentMode.getText().toString();
+        List<Integer> palette = ColorExtractor.getPaletteByMode(sourceBitmap, selectedMode);
+        String style = binding.tvCurrentStyle.getText().toString();
+        Bitmap poster = PosterRenderer.render(this, sourceBitmap, palette, currentExifInfo, style);
+        binding.imgPreview.setImageBitmap(poster);
+        showToast("海报已生成预览");
+    }
+
+    private void exportPoster() {
+        if (sourceBitmap == null) return;
+        updateInfoFromUI();
+        String selectedMode = binding.tvCurrentMode.getText().toString();
+        List<Integer> palette = ColorExtractor.getPaletteByMode(sourceBitmap, selectedMode);
+        String style = binding.tvCurrentStyle.getText().toString();
+        Bitmap poster = PosterRenderer.render(this, sourceBitmap, palette, currentExifInfo, style);
+        saveBitmapToGallery(poster);
+    }
+
+    private void saveBitmapToGallery(Bitmap bitmap) {
+        if (bitmap == null) return;
+        try {
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(new Date());
+            String fileName = "PhotoPalettePro_" + timeStamp + ".png";
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+                values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+                values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/PhotoPalettePro");
+
+                Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+                if (uri != null) {
+                    try (OutputStream outputStream = getContentResolver().openOutputStream(uri)) {
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+                        showToast("海报已成功导出到相册");
+                    }
+                }
+            } else {
+                File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+                File imageFile = new File(storageDir, fileName);
+                try (FileOutputStream fos = new FileOutputStream(imageFile)) {
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                    MediaStore.Images.Media.insertImage(getContentResolver(), imageFile.getAbsolutePath(), fileName, null);
+                    showToast("海报已成功导出到相册");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showToast("导出失败: " + e.getMessage());
+        }
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    // === 长按标题进入 About 页面（最终稳定版，Handler定时检测）===
+    private ValueAnimator scaleAnimator;
+    private Vibrator vibrator;
+    private long pressStartTime = 0;
+    private boolean isPressing = false;
+    private boolean hasJumped = false; // 防止重复跳转
+    private static final long LONG_PRESS_DURATION = 5000; // 5秒长按阈值
+    private Handler longPressHandler;
+    private Runnable longPressRunnable;
+
+    private void setupTitleLongPress() {
+        // ✅ 使用 ViewBinding 安全访问（避免 findViewById 失效）
+        if (binding == null || binding.tvAppTitle == null) return;
+
+        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        longPressHandler = new Handler(getMainLooper());
+
+        // 在View完全绘制完成后执行长按逻辑，确保View状态稳定
+        binding.tvAppTitle.post(() -> {
+            binding.tvAppTitle.setOnTouchListener((v, event) -> {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        pressStartTime = System.currentTimeMillis();
+                        isPressing = true;
+                        hasJumped = false;
+                        // 启动缩放动画（更明显的压感）
+                        startScaleAnimation(0.96f, 0.90f, 0.96f);
+                        // 第一次震动（开始）
+                        vibrateIfAvailable(150);
+                        
+                        // 启动长按检测
+                        if (longPressRunnable == null) {
+                            longPressRunnable = new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (isPressing && !hasJumped) {
+                                        long elapsed = System.currentTimeMillis() - pressStartTime;
+                                        if (elapsed >= LONG_PRESS_DURATION) {
+                                            // 5秒后立即跳转
+                                            hasJumped = true;
+                                            // 停止动画
+                                            if (scaleAnimator != null && scaleAnimator.isRunning()) {
+                                                scaleAnimator.cancel();
+                                            }
+                                            // 恢复原始缩放
+                                            v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start();
+                                            // 最终震动反馈
+                                            vibrateIfAvailable(250);
+                                            // 立即跳转到 AboutActivity
+                                            try {
+                                                startActivity(new android.content.Intent(MainActivity.this, AboutActivity.class));
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                                showToast("跳转失败: " + e.getMessage());
+                                            }
+                                        } else {
+                                            // 继续检查
+                                            longPressHandler.postDelayed(this, 100);
+                                        }
+                                    }
+                                }
+                            };
+                        }
+                        longPressHandler.postDelayed(longPressRunnable, LONG_PRESS_DURATION);
+                        break;
+
+                    case MotionEvent.ACTION_MOVE:
+                        if (!isPressing) return false;
+                        long elapsed = System.currentTimeMillis() - pressStartTime;
+                        
+                        // 调试日志：显示当前长按时间
+                        // showToast("长按时间: " + elapsed + "ms");
+                        
+                        // 长按过程中持续提供反馈
+                        if (elapsed >= 1000 && elapsed < 2000) {
+                            // 1秒后第二次震动
+                            vibrateIfAvailable(80);
+                        } else if (elapsed >= 2000 && elapsed < 3000) {
+                            // 2秒后第三次震动
+                            vibrateIfAvailable(80);
+                        } else if (elapsed >= 3000 && elapsed < 4000) {
+                            // 3秒后第四次震动（提示即将完成）
+                            vibrateIfAvailable(100);
+                        } else if (elapsed >= 4000 && elapsed < 5000) {
+                            // 4秒后第五次震动（最后提醒）
+                            vibrateIfAvailable(120);
+                        }
+                        break;
+
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        isPressing = false;
+                        // 取消长按检测
+                        if (longPressHandler != null && longPressRunnable != null) {
+                            longPressHandler.removeCallbacks(longPressRunnable);
+                        }
+                        // 停止动画
+                        if (scaleAnimator != null && scaleAnimator.isRunning()) {
+                            scaleAnimator.cancel();
+                        }
+                        // 恢复原始缩放
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start();
+                        // 如果未达到5秒，给予完成震动
+                        if (!hasJumped) {
+                            vibrateIfAvailable(100);
+                        }
+                        // 轻点提示：只有在没有长按时才显示
+                        if (!hasJumped && (System.currentTimeMillis() - pressStartTime) < LONG_PRESS_DURATION) {
+                            showToast("长按有惊喜");
+                        }
+                        break;
+                }
+                return true;
+            });
+        });
+    }
+
+    private void vibrateIfAvailable(long duration) {
+        if (vibrator == null) return;
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            // Android 8.0+ 使用 VibrationEffect
+            try {
+                vibrator.vibrate(android.os.VibrationEffect.createOneShot(duration, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
+            } catch (Exception e) {
+                // 如果VibrationEffect不可用，回退到旧API
+                vibrator.vibrate(duration);
+            }
+        } else {
+            // Android 7.1及以下使用旧API
+            vibrator.vibrate(duration);
+        }
+    }
+
+    private void startScaleAnimation(float start, float mid, float end) {
+        if (scaleAnimator != null && scaleAnimator.isRunning()) {
+            scaleAnimator.cancel();
+        }
+        scaleAnimator = ValueAnimator.ofFloat(start, mid, end);
+        scaleAnimator.setDuration(1200);
+        scaleAnimator.addUpdateListener(animation -> {
+            float value = (float) animation.getAnimatedValue();
+            binding.tvAppTitle.setScaleX(value);
+            binding.tvAppTitle.setScaleY(value);
+        });
+        scaleAnimator.start();
+    }
+
+}

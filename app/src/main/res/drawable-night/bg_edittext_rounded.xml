@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+	<!-- 输入框背景：略浅于卡片背景，视觉上呈凹陷状 -->
+	<solid android:color="#21262D" />
+	<!-- 微妙的边框，提高输入框的定义度 -->
+	<stroke android:width="1dp" android:color="#30363D" />
+	<corners android:radius="10dp" />
+</shape>
+

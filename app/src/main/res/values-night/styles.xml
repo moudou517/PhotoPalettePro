@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- ============================================
+		夜间模式样式补充
+	============================================ -->
+	
+	<!-- 1. 夜间模式的弹出菜单样式 -->
+	<style name="Widget.App.PopupMenu" parent="Widget.MaterialComponents.PopupMenu">
+		<!-- 使用夜间模式的圆角卡片背景 -->
+		<item name="android:popupBackground">@drawable/bg_card_rounded</item>
+		<item name="android:minWidth">280dp</item>
+		<item name="android:dropDownVerticalOffset">4dp</item>
+	</style>
+	
+	<!-- 2. 夜间模式的菜单文字样式 -->
+	<style name="TextAppearance.App.PopupMenu.Item" parent="TextAppearance.MaterialComponents.Subtitle1">
+		<item name="android:textColor">@color/text_main</item>
+		<item name="android:textSize">16sp</item>
+	</style>
+	
+	<!-- 3. 输入框焦点效果（夜间） -->
+	<style name="EditText.Dark" parent="Widget.AppCompat.EditText">
+		<item name="android:textColor">@color/text_main</item>
+		<item name="android:textColorHint">@color/hint_text</item>
+		<item name="android:backgroundTint">@color/input_focus</item>
+	</style>
+	
+</resources>
+

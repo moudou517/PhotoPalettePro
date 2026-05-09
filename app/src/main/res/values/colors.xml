@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- ============================================
+		基础色值 (不可缺失)
+	============================================ -->
+	<color name="black">#FF000000</color>
+	<color name="white">#FFFFFFFF</color>
+	<color name="primary_blue">#2563EB</color>
+	<color name="primary_blue_dark">#1D4ED8</color>
+	<color name="accent_green">#10B981</color> <!-- 补充了主题引用的绿 -->
+	<color name="red">#EF4444</color>
+	
+	<!-- ============================================
+		表面与背景色 (日间模式基础)
+	============================================ -->
+	<color name="surface_light">#FFFFFF</color>[cite: 16]
+	<color name="surface_dark">#1E293B</color>[cite: 16]
+	
+	<!-- ============================================
+		文字颜色 (日间模式基础)
+	============================================ -->
+	<color name="text_primary_light">#1E293B</color>[cite: 16]
+	<color name="text_secondary_light">#64748B</color>[cite: 16]
+	<color name="text_primary_dark">#F1F5F9</color>[cite: 16]
+	<color name="text_secondary_dark">#94A3B8</color>[cite: 16]
+	
+	<!-- ============================================
+		语义化引用：日间模式
+	============================================ -->
+	<color name="app_background">#F8F9FA</color>
+	<color name="card_background">@color/surface_light</color>[cite: 16]
+	<color name="text_main">@color/text_primary_light</color>[cite: 16]
+	<color name="text_secondary">@color/text_secondary_light</color>[cite: 16]
+	<color name="input_background">#F3F4F6</color>[cite: 16]
+	<color name="divider_color">#E5E7EB</color>[cite: 16]
+	
+	<!-- ============================================
+		扩展颜色定义（日间模式）
+	============================================ -->
+	
+	<!-- 卡片边框 -->
+	<color name="card_border">#D1D5DB</color>
+	
+	<!-- 按钮悬停效果 -->
+	<color name="button_hover">#1D4ED8</color>
+	
+	<!-- 输入框焦点边框色 -->
+	<color name="input_focus">#2563EB</color>
+	
+	<!-- 文字提示色（hint text） -->
+	<color name="hint_text">#9CA3AF</color>
+	
+	<!-- 涟漪效果色（ripple） -->
+	<color name="ripple_color">#E5E7EB</color>
+	
+	<!-- 强调色新增 -->
+	<color name="accent_blue">#2563EB</color>
+	<color name="accent_green_dark">#059669</color>
+	<color name="status_warning">#F59E0B</color>
+	<color name="status_error">#DC2626</color>
+	
+	<!-- 微妙分割线 -->
+	<color name="subtle_divider">#F0F0F2</color>
+	
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+	<!-- 纯白卡片背景 -->
+	<solid android:color="#FFFFFF" />
+	<!-- 微妙的灰色边框，提供卡片定义度 -->
+	<stroke android:width="0.5dp" android:color="#E5E7EB" />
+	<corners android:radius="16dp" />
+</shape>
+

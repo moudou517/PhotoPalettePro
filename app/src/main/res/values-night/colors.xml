@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- ============================================
+		夜间模式优化配色方案（Material Design Dark）
+		设计思路：高对比度 + 护眼 + 现代感
+	============================================ -->
+	
+	<!-- 背景颜色：清爽深蓝黑（GitHub深色风格） -->
+	<color name="app_background">#0D1117</color>
+	
+	<!-- 卡片表面：深灰蓝色，提供层次感 -->
+	<color name="card_background">#161B22</color>
+	
+	<!-- 主文字色：柔和白色，保护眼睛 -->
+	<color name="text_main">#E6EAEF</color>
+	
+	<!-- 辅助文字色：深灰色，保持可读性 -->
+	<color name="text_secondary">#8B949E</color>
+	
+	<!-- 输入框背景：略浅于卡片，形成视觉层次 -->
+	<color name="input_background">#21262D</color>
+	
+	<!-- 分割线：深蓝灰，微妙而优雅 -->
+	<color name="divider_color">#30363D</color>
+	
+	<!-- ============================================
+		扩展颜色定义（提升整体美感）
+	============================================ -->
+	
+	<!-- 卡片边框：提高边界定义度 -->
+	<color name="card_border">#30363D</color>
+	
+	<!-- 按钮悬停效果 -->
+	<color name="button_hover">#1f6feb</color>
+	
+	<!-- 输入框焦点边框色 -->
+	<color name="input_focus">#58A6FF</color>
+	
+	<!-- 文字提示色（hint text） -->
+	<color name="hint_text">#6E7681</color>
+	
+	<!-- 涟漪效果色（ripple） -->
+	<color name="ripple_color">#30363D</color>
+	
+	<!-- 强调色新增（用于特殊UI元素） -->
+	<color name="accent_blue">#58A6FF</color>
+	<color name="accent_green_dark">#238636</color>
+	<color name="status_warning">#D29922</color>
+	<color name="status_error">#DA3633</color>
+	
+	<!-- 微妙分割线（用于卡片内部） -->
+	<color name="subtle_divider">#21262D</color>
+	
+</resources>

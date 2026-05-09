@@ -1,0 +1,17 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+	<!-- 基础主题配置（夜间） -->
+	<style name="Base.Theme.PhotoPalettePro" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+		<item name="colorPrimary">@color/primary_blue_dark</item>
+		
+		<!-- 核心：夜间模式同样应用该样式，实现一致的圆角和宽度[cite: 3] -->
+		<item name="popupMenuStyle">@style/Widget.App.PopupMenu</item>
+		<item name="android:textAppearanceLargePopupMenu">@style/TextAppearance.App.PopupMenu.Item</item>
+	</style>
+	
+	<style name="Theme.PhotoPalettePro" parent="Base.Theme.PhotoPalettePro">
+		<!-- 窗体属性配置（夜间）[cite: 3] -->
+		<item name="android:windowBackground">@color/app_background</item>
+		<item name="android:windowLightStatusBar">false</item>
+		<item name="android:statusBarColor">@color/card_background</item>
+	</style>
+</resources>

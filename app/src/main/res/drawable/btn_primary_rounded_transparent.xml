@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#B0BEC5">
+    <!-- 白天模式按钮：透明背景 -->
+    <item>
+        <shape android:shape="rectangle">
+            <!-- 透明背景 -->
+            <solid android:color="@android:color/transparent" />
+            <corners android:radius="25dp" />
+        </shape>
+    </item>
+</ripple>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+		android:color="#E5E7EB">
+	<!-- 日间模式按钮：品牌蓝色 -->
+	<item>
+		<shape android:shape="rectangle">
+			<!-- Apple风格的深蓝按钮 -->
+			<solid android:color="#007AFF" />
+			<corners android:radius="25dp" />
+		</shape>
+	</item>
+</ripple>
+
