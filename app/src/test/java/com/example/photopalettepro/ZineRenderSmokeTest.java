@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -67,6 +68,38 @@ public class ZineRenderSmokeTest {
         assertNotNull(back);
         assertTrue("back 应为 4:3 横版", back.getWidth() * 3 == back.getHeight() * 4);
         writePng(back, new File(dir, "back.png"));
+    }
+
+    /**
+     * 用真实照片跑一遍：合成测试图太平滑，测不出高频细节的处理能力。
+     */
+    @Test
+    public void renderRealPhotoToPng() throws Exception {
+        File source = new File(
+                "E:/Data/AndroidWorkSpace/PhotoPalettePro/build/zine-ref/02-winter-crossing-source.jpg");
+        if (!source.exists()) {
+            System.out.println("跳过真实样张测试：找不到 " + source.getAbsolutePath());
+            return;
+        }
+
+        Bitmap photo = BitmapFactory.decodeFile(source.getAbsolutePath());
+        assertNotNull(photo);
+
+        List<Integer> palette = ColorExtractor.getTopWeightedColors(photo, "默认渲染", 6);
+        ZinePostcardConfig cfg = new ZinePostcardConfig();
+        cfg.title = "Forest Homestead";
+        cfg.subtitle = "Postcard Study";
+        cfg.location = "43.21°N 87.65°E";
+        cfg.date = "2025.07.02";
+        cfg.index = "004";
+
+        File dir = new File("build/zine-out");
+        assertTrue(dir.exists() || dir.mkdirs());
+
+        Bitmap front = ZinePostcardRenderer.renderFront(photo, palette, cfg, 1200);
+        assertNotNull(front);
+        writePng(front, new File(dir, "front-real.png"));
+        System.out.println("真实样张已渲染 -> build/zine-out/front-real.png");
     }
 
     private static String toHex(List<Integer> colors) {

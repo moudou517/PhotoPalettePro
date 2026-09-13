@@ -51,7 +51,11 @@ public class AboutActivity extends AppCompatActivity {
             sb.append("• <b>photo-abstract-editorial</b> — 美术方向：克制的抽象短笔触、"
                     + "保留原图方向与重心、不做完整插画与矢量描摹<br/>");
             sb.append("<a href='https://github.com/kwhi6693-web/photo-abstract-editorial'>"
-                    + "github.com/kwhi6693-web/photo-abstract-editorial</a><br/><br/>");
+                    + "github.com/kwhi6693-web/photo-abstract-editorial</a><br/>");
+            sb.append("• <b>gathered-scenes-zine-skill</b> — 写实那一半：真景为锚（照片如实保留）、"
+                    + "色彩成结构（一个高纯度色）、撕纸成界（手撕纤维边）<br/>");
+            sb.append("<a href='https://github.com/Zeejay0/gathered-scenes-zine-skill'>"
+                    + "github.com/Zeejay0/gathered-scenes-zine-skill</a><br/><br/>");
 
             // --- 联系方式 ---
             sb.append("<b>【联系与支持】</b><br/>");
