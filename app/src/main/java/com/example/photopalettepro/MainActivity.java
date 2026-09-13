@@ -98,8 +98,11 @@ public class MainActivity extends AppCompatActivity {
             new ActivityResultContracts.GetContent(),
             uri -> {
                 if (uri != null) {
+                    // 判断是不是「换了另一张照片」：关系到要不要清掉上一张遗留的创作文案。
+                    // 重新导入同一张时不清，避免把用户刚打的字抹掉。
+                    boolean switchedPhoto = currentImageUri == null || !currentImageUri.equals(uri);
                     currentImageUri = uri;
-                    loadSourceImage(uri);
+                    loadSourceImage(uri, switchedPhoto);
                 }
             }
     );
@@ -640,7 +643,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * 加载源图片
      */
-    private void loadSourceImage(Uri uri) {
+    private void loadSourceImage(Uri uri, boolean switchedPhoto) {
         try {
             int[] dimensions = new int[2];
             long totalPixels = ImageProcessingHelper.readPhotoDimensions(
@@ -668,7 +671,15 @@ public class MainActivity extends AppCompatActivity {
 
                 posterBinding.tvEmptyHint.setVisibility(View.GONE);
 
-                // 首先填充照片自带的原始 EXIF
+                // 换了照片：先清掉上一张遗留的明信片创作文案。
+                // 标题／副标题／序号是用户自己写的、不是 EXIF 派生，所以单独清；
+                // 若这张照片在本地历史里有记录，随后的 checkAndLoadHistoryConfig
+                // 会异步回填它自己上次保存的内容。
+                if (switchedPhoto) {
+                    resetZineCopyFields();
+                }
+
+                // 再填充照片自带的原始 EXIF（含明信片的 DATE / LOCATION）
                 autoFillExif(uri);
 
                 // 尝试从本地 Room 数据库读取此图片上一次的导出规格，如果存在则进行覆盖回填
@@ -690,6 +701,13 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             showToast("图片处理异常");
         }
+    }
+
+    /** 清空明信片里由用户撰写的文案字段（换照片时调用）。 */
+    private void resetZineCopyFields() {
+        zineBinding.etZineTitle.setText("");
+        zineBinding.etZineSubtitle.setText("");
+        zineBinding.etZineIndex.setText("01");
     }
 
     private void autoFillExif(Uri uri) {

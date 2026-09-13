@@ -1,0 +1,10 @@
+fix: 换照片时清空明信片的创作文案
+
+与上一处是同一类残留问题：换照片后，标题／副标题／序号仍保留
+上一张照片的内容。
+
+* 导入入口记录「是否换了另一张照片」（比较 Uri），传给 loadSourceImage
+* 换照片时调用 resetZineCopyFields()，清空标题／副标题，序号复位 01
+* 重新导入同一张时不清，避免抹掉用户刚打的字
+* DATE / LOCATION 仍是无条件按 EXIF 覆盖（文件是事实来源）；
+  若该照片在历史里有记录，随后的 checkAndLoadHistoryConfig 会回填
