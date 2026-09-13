@@ -51,4 +51,21 @@
 	<!-- 微妙分割线（用于卡片内部） -->
 	<color name="subtle_divider">#21262D</color>
 	
+	<!-- ============================================
+		iOS 玻璃拟态 (Glassmorphism) 扩展色（夜间）
+	============================================ -->
+	<!-- 玻璃卡片表面：深色半透明，透出背景氛围 -->
+	<color name="glass_card_top">#66161B22</color>
+	<color name="glass_card_bottom">#40161B22</color>
+	<!-- 顶部/底部悬浮栏的玻璃表面 -->
+	<color name="glass_bar_top">#66161B22</color>
+	<color name="glass_bar_bottom">#4D161B22</color>
+	<!-- 玻璃高光描边（夜间用极淡白） -->
+	<color name="glass_border">#1FFFFFFF</color>
+	<color name="glass_highlight">#14FFFFFF</color>
+	<!-- 页面柔和渐变背景 -->
+	<color name="bg_gradient_start">#0A0D14</color>
+	<color name="bg_gradient_mid">#0D1117</color>
+	<color name="bg_gradient_end">#0B1220</color>
+	
 </resources>

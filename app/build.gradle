@@ -12,8 +12,8 @@ android {
         targetSdk 35
 
         // 准备发版版本号
-        versionCode 4
-        versionName "1.0.0"
+        versionCode 5
+        versionName "2.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -49,13 +49,20 @@ android {
     }
 
     compileOptions {
-        // 建议升级到 Java 17 以匹配最新的 Android SDK 和库
+        // 使用 Java 17 以匹配最新的 Android SDK 和库
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
 
     buildFeatures {
         viewBinding true
+    }
+
+    testOptions {
+        unitTests {
+            // 允许 Robolectric 以真实 Skia 渲染管线跑 Canvas 代码，用于校验 Zine 渲染结果
+            includeAndroidResources = true
+        }
     }
 }
 
@@ -65,19 +72,29 @@ dependencies {
     implementation 'com.google.android.material:material:1.10.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
 
-    // 导航库：降级到 2.7.7 以获得更好的 Java 兼容性
+    // 导航库：使用 2.7.7 获得优秀的 Java 兼容性
     implementation 'androidx.navigation:navigation-fragment:2.7.7'
     implementation 'androidx.navigation:navigation-ui:2.7.7'
 
-    // 界面刷新支持（主界面 activity_main.xml 中用到了这个组件）
+    // 界面刷新支持（主界面 activity_main.xml 中用到的下拉刷新组件）
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
-    // 摄影核心库
+    // 翻页切换：海报模式 / Zine 明信片模式
+    implementation "androidx.viewpager2:viewpager2:1.1.0"
+    implementation "androidx.recyclerview:recyclerview:1.3.2"
+
+    // 摄影与图像核心库
     implementation 'androidx.exifinterface:exifinterface:1.3.6'
     implementation 'androidx.palette:palette:1.0.0'
 
-    // 测试库
+    // Room 数据库持久化（纯 Java 高效版，剔除了无用的 room-ktx）
+    implementation 'androidx.room:room-runtime:2.5.2'
+    annotationProcessor 'androidx.room:room-compiler:2.5.2'
+
+    // 测试基础库
     testImplementation 'junit:junit:4.13.2'
+    // 本地可视化校验：用真实 Skia 渲染 Zine 明信片并输出 PNG
+    testImplementation 'org.robolectric:robolectric:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 }

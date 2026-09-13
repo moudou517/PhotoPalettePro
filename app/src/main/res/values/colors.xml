@@ -62,4 +62,21 @@
 	<!-- 微妙分割线 -->
 	<color name="subtle_divider">#F0F0F2</color>
 	
+	<!-- ============================================
+		iOS 玻璃拟态 (Glassmorphism) 扩展色（日间）
+	============================================ -->
+	<!-- 玻璃卡片表面（自上而下的轻微渐变，模拟磨砂受光） -->
+	<color name="glass_card_top">#E6FFFFFF</color>
+	<color name="glass_card_bottom">#C4FFFFFF</color>
+	<!-- 顶部/底部悬浮栏的玻璃表面 -->
+	<color name="glass_bar_top">#F2FFFFFF</color>
+	<color name="glass_bar_bottom">#C9FFFFFF</color>
+	<!-- 玻璃高光描边 -->
+	<color name="glass_border">#3DFFFFFF</color>
+	<color name="glass_highlight">#66FFFFFF</color>
+	<!-- 页面柔和渐变背景（玻璃的底色氛围） -->
+	<color name="bg_gradient_start">#E7EEF9</color>
+	<color name="bg_gradient_mid">#F4F6FA</color>
+	<color name="bg_gradient_end">#E8F3EE</color>
+	
 </resources>

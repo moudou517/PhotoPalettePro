@@ -25,6 +25,7 @@ import android.media.MediaScannerConnection;
 /**
  * 图片保存助手类
  * 修复点：增加主线程回调保障、自动回收内存、优化版本兼容性
+ * 增强点：成功回调时返回真实的图片文件路径或 URI，供 Room 历史记录使用
  */
 public class ImageSaveHelper {
 
@@ -37,6 +38,7 @@ public class ImageSaveHelper {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public interface SaveCallback {
+        // 修改：此处的 message 将会承载保存成功后的真实路径/URI 字符串
         void onSuccess(String message);
         void onError(String errorMessage);
     }
@@ -47,67 +49,81 @@ public class ImageSaveHelper {
     }
 
     /**
-     * 保存图片到相册
+     * 异步保存 Bitmap 到相册
      */
-    public void saveBitmapToGallery(Bitmap bitmap) {
+    public void saveBitmapToGallery(final Bitmap bitmap) {
         if (bitmap == null || bitmap.isRecycled()) {
-            sendError("图片无效或已被回收");
+            sendError("无法保存空图片或已被回收的图片");
             return;
         }
 
         new Thread(() -> {
+            Bitmap targetBitmap = bitmap;
             try {
                 String fileName = generateFileName();
+                String savedPath;
 
-                // Android 10 (Q) 及以上使用 MediaStore API
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    saveWithMediaStore(bitmap, fileName);
+                    savedPath = saveWithScopedStorage(targetBitmap, fileName);
                 } else {
-                    saveWithLegacyAPI(bitmap, fileName);
+                    savedPath = saveWithLegacyAPI(targetBitmap, fileName);
                 }
 
-                // 【关键修改】保存成功后及时回收高清位图，释放内存
-                bitmap.recycle();
-
-                sendSuccess("已成功导出到相册");
+                // 成功后传递真实路径
+                sendSuccess(savedPath);
             } catch (Exception e) {
-                Log.e(TAG, "Failed to save bitmap", e);
+                Log.e(TAG, "Save failed", e);
                 sendError("保存失败: " + e.getMessage());
+            } finally {
+                // 核心修复：在这里统一回收由 PosterRenderer 生成的高清大图，防止 MainActivity 闪退或内存泄漏
+                if (targetBitmap != null && !targetBitmap.isRecycled()) {
+                    targetBitmap.recycle();
+                }
             }
         }).start();
     }
 
     /**
-     * Android Q (10) 及以上的保存方式 (分区存储)
+     * Android Q (10) 及以上的 Scoped Storage 保存方式
      */
-    private void saveWithMediaStore(Bitmap bitmap, String fileName) throws Exception {
+    private String saveWithScopedStorage(Bitmap bitmap, String fileName) throws Exception {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
-        // Android 10 及以上支持 RELATIVE_PATH
-        values.put(MediaStore.Images.Media.RELATIVE_PATH,
-                Environment.DIRECTORY_PICTURES + "/" + APP_FOLDER);
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + File.separator + APP_FOLDER);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            values.put(MediaStore.Images.Media.IS_PENDING, 1);
+        }
 
         ContentResolver resolver = context.getContentResolver();
-        Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        Uri collectionUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        Uri itemUri = resolver.insert(collectionUri, values);
 
-        if (uri != null) {
-            try (OutputStream outputStream = resolver.openOutputStream(uri)) {
-                if (outputStream != null) {
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-                }
-            }
-        } else {
-            throw new Exception("无法创建媒体文件路径");
+        if (itemUri == null) {
+            throw new Exception("无法在 MediaStore 中创建新记录");
         }
+
+        try (OutputStream os = resolver.openOutputStream(itemUri)) {
+            if (os == null) {
+                throw new Exception("无法打开输出流");
+            }
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, os);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            values.clear();
+            values.put(MediaStore.Images.Media.IS_PENDING, 0);
+            resolver.update(itemUri, values, null, null);
+        }
+
+        return itemUri.toString(); // 返回保存成功的媒体库 content:// URI 字符串
     }
 
     /**
      * Android Q 以下的保存方式 (传统文件 API)
      */
-    private void saveWithLegacyAPI(Bitmap bitmap, String fileName) throws Exception {
-        File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
+    private String saveWithLegacyAPI(Bitmap bitmap, String fileName) throws Exception {
+        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         File appDir = new File(storageDir, APP_FOLDER);
 
         if (!appDir.exists() && !appDir.mkdirs()) {
@@ -123,25 +139,25 @@ public class ImageSaveHelper {
                     new String[]{imageFile.getAbsolutePath()},
                     new String[]{"image/png"}, null);
         }
+        return imageFile.getAbsolutePath(); // 返回物理绝对路径
     }
 
     private String generateFileName() {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
-                Locale.getDefault()).format(new Date());
-        return "PPP_" + timeStamp + ".png";
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        return "PPP_" + timeStamp + ".png"; // 移除了 \
     }
 
     // 辅助方法：确保回调在主线程
-    private void sendSuccess(String msg) {
+    private void sendSuccess(String path) {
         mainHandler.post(() -> {
-            if (callback != null) callback.onSuccess(msg);
+            if (callback != null) callback.onSuccess(path);
         });
     }
 
     // 辅助方法：确保回调在主线程
-    private void sendError(String msg) {
+    private void sendError(String errorMsg) {
         mainHandler.post(() -> {
-            if (callback != null) callback.onError(msg);
+            if (callback != null) callback.onError(errorMsg);
         });
     }
 }

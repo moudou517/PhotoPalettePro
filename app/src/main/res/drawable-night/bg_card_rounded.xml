@@ -4,6 +4,6 @@
 	<solid android:color="#161B22" />
 	<!-- 细微灰蓝色边框，定义边界 -->
 	<stroke android:width="0.5dp" android:color="#30363D" />
-	<corners android:radius="16dp" />
+	<corners android:radius="24dp" />
 </shape>
 

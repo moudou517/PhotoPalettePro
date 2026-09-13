@@ -5,6 +5,7 @@ import android.net.Uri;
 import androidx.exifinterface.media.ExifInterface;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class ExifUtil {
@@ -626,10 +627,66 @@ public class ExifUtil {
             // 8. 拼接汇总字段
             info.put("param", shutter + "  " + aperture + "  " + info.get("iso"));
 
+            // 9. 拍摄日期（供 Zine 明信片的 DATE 预填）
+            String rawDate = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL);
+            if (rawDate == null || rawDate.trim().isEmpty()) {
+                rawDate = exif.getAttribute(ExifInterface.TAG_DATETIME);
+            }
+            info.put("date", formatExifDate(rawDate));
+
+            // 10. 拍摄地点（供 Zine 明信片的 LOCATION 预填）
+            //     纯离线读取 GPS，不联网反查地名，避免隐私外泄
+            info.put("location", formatExifLocation(exif));
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         return info;
+    }
+
+    /**
+     * 把 EXIF 的 "2024:05:17 18:30:00" 转成 "2024.05.17"；解析失败返回空串。
+     */
+    private static String formatExifDate(String raw) {
+        if (raw == null) return "";
+        String trimmed = raw.trim();
+        try {
+            String datePart = trimmed.split(" ")[0];
+            String[] ymd = datePart.split(":");
+            if (ymd.length >= 3) {
+                String y = ymd[0].trim();
+                String m = ymd[1].trim();
+                String d = ymd[2].trim();
+                if (m.length() == 1) m = "0" + m;
+                if (d.length() == 1) d = "0" + d;
+                return y + "." + m + "." + d;
+            }
+        } catch (Exception ignored) {
+        }
+        return "";
+    }
+
+    /**
+     * 读取 EXIF GPS 并格式化为 "31.23°N 121.47°E"；没有 GPS 信息时返回空串。
+     */
+    private static String formatExifLocation(ExifInterface exif) {
+        try {
+            float[] latLong = new float[2];
+            if (!exif.getLatLong(latLong)) return "";
+
+            double lat = latLong[0];
+            double lon = latLong[1];
+            if (Double.isNaN(lat) || Double.isNaN(lon)) return "";
+            if (lat == 0d && lon == 0d) return "";
+
+            String latStr = String.format(Locale.US, "%.2f°%s",
+                    Math.abs(lat), lat >= 0 ? "N" : "S");
+            String lonStr = String.format(Locale.US, "%.2f°%s",
+                    Math.abs(lon), lon >= 0 ? "E" : "W");
+            return latStr + " " + lonStr;
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private static String inferCameraBrand(String lens) {

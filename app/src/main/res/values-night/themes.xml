@@ -10,7 +10,7 @@
 	
 	<style name="Theme.PhotoPalettePro" parent="Base.Theme.PhotoPalettePro">
 		<!-- 窗体属性配置（夜间）[cite: 3] -->
-		<item name="android:windowBackground">@color/app_background</item>
+		<item name="android:windowBackground">@drawable/bg_app_gradient</item>
 		<item name="android:windowLightStatusBar">false</item>
 		<item name="android:statusBarColor">@color/card_background</item>
 	</style>

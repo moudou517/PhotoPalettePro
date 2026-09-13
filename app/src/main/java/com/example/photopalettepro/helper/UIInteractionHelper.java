@@ -1,8 +1,10 @@
 package com.example.photopalettepro.helper;
 
 import android.annotation.SuppressLint;
+import android.graphics.Outline;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.view.animation.OvershootInterpolator;
 
 /**
@@ -61,6 +63,36 @@ public class UIInteractionHelper {
         
         container.setOutlineProvider(android.view.ViewOutlineProvider.BACKGROUND);
         container.setClipToOutline(true);
+    }
+
+    /**
+     * 给任意视图应用圆角裁剪，确保其子内容（图片、涟漪、背景）在滑动时
+     * 也不会超出圆角边界，修复滑动过程中出现的“直角”问题。
+     *
+     * @param view      目标视图
+     * @param radiusDp  圆角半径（dp）
+     */
+    public static void applyRoundedClip(final View view, final float radiusDp) {
+        if (view == null) return;
+
+        final float radius = view.getResources().getDisplayMetrics().density * radiusDp;
+        view.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View v, Outline outline) {
+                outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), radius);
+            }
+        });
+        view.setClipToOutline(true);
+    }
+
+    /**
+     * 批量应用圆角裁剪
+     */
+    public static void applyRoundedClipBatch(float radiusDp, View... views) {
+        if (views == null) return;
+        for (View view : views) {
+            applyRoundedClip(view, radiusDp);
+        }
     }
 }
 

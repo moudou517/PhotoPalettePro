@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 模式一：摄影海报（原有功能，作为一个可翻页的整页） -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  xmlns:app="http://schemas.android.com/apk/res-auto"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent"
+			  android:orientation="vertical">
+
+	<!-- 照片预览：一块大的圆角玻璃版块，16:9 图像渲染在版块内部 -->
+	<androidx.constraintlayout.widget.ConstraintLayout
+			android:id="@+id/previewContainer"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="12dp"
+			android:layout_marginHorizontal="12dp"
+			android:padding="16dp"
+			android:background="@drawable/bg_glass_card"
+			android:elevation="4dp">
+
+		<ImageView
+				android:id="@+id/imgPreview"
+				android:layout_width="0dp"
+				android:layout_height="0dp"
+				android:scaleType="centerCrop"
+				android:contentDescription="照片预览区域"
+				app:layout_constraintDimensionRatio="16:9"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintTop_toTopOf="parent" />
+
+		<TextView
+				android:id="@+id/tvEmptyHint"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="未导入照片"
+				android:textColor="@color/text_secondary"
+				app:layout_constraintStart_toStartOf="@id/imgPreview"
+				app:layout_constraintEnd_toEndOf="@id/imgPreview"
+				app:layout_constraintTop_toTopOf="@id/imgPreview"
+				app:layout_constraintBottom_toBottomOf="@id/imgPreview" />
+	</androidx.constraintlayout.widget.ConstraintLayout>
+
+	<!-- 中间滑动版块：整块圆角玻璃卡片作为一个整体上下滑动 -->
+	<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+			android:id="@+id/swipeRefreshLayout"
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="1">
+
+		<androidx.core.widget.NestedScrollView
+				android:id="@+id/scrollView"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:overScrollMode="always">
+
+			<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:orientation="vertical"
+					android:paddingBottom="12dp">
+
+				<LinearLayout
+						android:id="@+id/configCard"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:orientation="vertical"
+						android:layout_marginHorizontal="12dp"
+						android:layout_marginTop="12dp"
+						android:padding="20dp"
+						android:background="@drawable/bg_glass_card"
+						android:elevation="2dp">
+
+					<TextView
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="渲染配置"
+							android:textStyle="bold"
+							android:textSize="16sp"
+							android:textColor="@color/text_main"
+							android:layout_marginBottom="20dp" />
+
+					<LinearLayout
+							android:id="@+id/containerSelectMode"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:orientation="vertical"
+							android:clickable="true"
+							android:focusable="true"
+							android:paddingVertical="8dp">
+						<TextView
+								android:id="@+id/tvCurrentMode"
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="默认渲染"
+								android:textSize="17sp"
+								android:textColor="@color/text_main" />
+						<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="取色逻辑"
+								android:textSize="13sp"
+								android:textColor="@color/text_secondary"
+								android:layout_marginTop="2dp" />
+					</LinearLayout>
+
+					<View
+							android:layout_width="match_parent"
+							android:layout_height="0.5dp"
+							android:background="@color/divider_color"
+							android:layout_marginVertical="8dp"/>
+
+					<LinearLayout
+							android:id="@+id/containerSelectStyle"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:orientation="vertical"
+							android:clickable="true"
+							android:focusable="true"
+							android:paddingVertical="8dp">
+						<TextView
+								android:id="@+id/tvCurrentStyle"
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="默认格式"
+								android:textSize="17sp"
+								android:textColor="@color/text_main" />
+						<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="排列方式"
+								android:textSize="13sp"
+								android:textColor="@color/text_secondary"
+								android:layout_marginTop="2dp" />
+					</LinearLayout>
+
+					<View
+							android:layout_width="match_parent"
+							android:layout_height="1dp"
+							android:background="@color/divider_color"
+							android:layout_marginVertical="20dp"/>
+
+					<TextView
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="机身与镜头信息"
+							android:textStyle="bold"
+							android:textSize="14sp"
+							android:textColor="@color/text_main" />
+
+					<EditText
+							android:id="@+id/etDevice"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:background="@drawable/bg_edittext_rounded"
+							android:hint="机身型号"
+							android:textColor="@color/text_main"
+							android:textColorHint="@color/text_secondary"
+							android:paddingHorizontal="12dp"
+							android:textSize="14sp"
+							android:layout_marginTop="10dp"
+							android:inputType="text"
+							android:singleLine="true" />
+
+					<EditText
+							android:id="@+id/etLens"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:background="@drawable/bg_edittext_rounded"
+							android:hint="镜头型号"
+							android:textColor="@color/text_main"
+							android:textColorHint="@color/text_secondary"
+							android:paddingHorizontal="12dp"
+							android:textSize="14sp"
+							android:layout_marginTop="10dp"
+							android:inputType="text"
+							android:singleLine="true" />
+
+					<LinearLayout
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:orientation="horizontal"
+							android:weightSum="3"
+							android:layout_marginTop="10dp">
+						<EditText android:id="@+id/etShutter" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:background="@drawable/bg_edittext_rounded" android:hint="快门" android:textColor="@color/text_main" android:textColorHint="@color/text_secondary" android:paddingHorizontal="8dp" android:textSize="13sp" android:layout_marginEnd="6dp" android:singleLine="true" />
+						<EditText android:id="@+id/etAperture" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:background="@drawable/bg_edittext_rounded" android:hint="光圈" android:textColor="@color/text_main" android:textColorHint="@color/text_secondary" android:paddingHorizontal="8dp" android:textSize="13sp" android:layout_marginEnd="6dp" android:singleLine="true" />
+						<EditText android:id="@+id/etIso" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:background="@drawable/bg_edittext_rounded" android:hint="ISO" android:textColor="@color/text_main" android:textColorHint="@color/text_secondary" android:paddingHorizontal="8dp" android:textSize="13sp" android:singleLine="true" />
+					</LinearLayout>
+
+					<LinearLayout
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginTop="10dp"
+							android:gravity="center_vertical"
+							android:orientation="horizontal"
+							android:weightSum="3">
+
+						<EditText
+								android:id="@+id/etSign"
+								android:layout_width="0dp"
+								android:layout_height="48dp"
+								android:layout_weight="2"
+								android:background="@drawable/bg_edittext_rounded"
+								android:hint="水印签名: @YourName"
+								android:inputType="text"
+								android:paddingHorizontal="12dp"
+								android:textColor="@color/text_main"
+								android:textColorHint="@color/text_secondary"
+								android:textSize="14sp"
+								android:layout_marginEnd="6dp"
+								android:singleLine="true" />
+
+						<com.google.android.material.switchmaterial.SwitchMaterial
+								android:id="@+id/switchAddWatermark"
+								android:layout_width="0dp"
+								android:layout_height="wrap_content"
+								android:layout_weight="1"
+								android:checked="true"
+								android:text="添加水印"
+								android:textColor="@color/text_main"
+								android:textSize="13sp"
+								android:paddingStart="8dp"
+								android:minHeight="0dp"
+								android:minWidth="0dp"
+								app:switchPadding="4dp" />
+					</LinearLayout>
+
+					<Button
+							android:id="@+id/btnGeneratePreview"
+							android:layout_width="match_parent"
+							android:layout_height="50dp"
+							android:layout_marginTop="24dp"
+							android:background="@drawable/btn_primary_rounded"
+							android:text="预览渲染效果"
+							android:textColor="@color/white"
+							android:textAllCaps="false"
+							android:textStyle="bold" />
+				</LinearLayout>
+			</LinearLayout>
+		</androidx.core.widget.NestedScrollView>
+	</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+</LinearLayout>

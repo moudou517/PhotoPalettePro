@@ -27,6 +27,62 @@ public class ColorExtractor {
     }
 
     /**
+     * 按指定取色逻辑取得色板，再按「权重 = 画面覆盖像素数」降序返回前 count 个颜色。
+     *
+     * 这样明信片既能跟随主页面的取色逻辑（默认渲染 / 取反差色 / 突出原色），
+     * 又能保证取到的是画面占比最高的颜色。
+     */
+    public static List<Integer> getTopWeightedColors(Bitmap imgBitmap, String mode, int count) {
+        List<Integer> result = new ArrayList<>();
+        if (imgBitmap == null || count <= 0) return result;
+
+        List<Integer> base = getPaletteByMode(imgBitmap, mode);
+        if (base == null || base.isEmpty()) return result;
+
+        // 去重：取色逻辑偶尔会产出重复色（例如反差色的替换色与原色重合），
+        // 不去重的话重复色会白占一个色位、并让权重统计失真。
+        List<Integer> unique = new ArrayList<>();
+        for (int c : base) {
+            if (!unique.contains(c)) unique.add(c);
+        }
+        if (unique.isEmpty()) return result;
+        base = unique;
+
+        Bitmap small = Bitmap.createScaledBitmap(imgBitmap, 150, 150, true);
+        int width = small.getWidth();
+        int height = small.getHeight();
+        int[] pixels = new int[width * height];
+        small.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        // 统计色板里每个颜色实际覆盖了多少像素（权重）
+        int n = base.size();
+        int[] weight = new int[n];
+        for (int p : pixels) {
+            int bi = 0;
+            double bd = Double.MAX_VALUE;
+            for (int j = 0; j < n; j++) {
+                double d = colorDistance(p, base.get(j));
+                if (d < bd) { bd = d; bi = j; }
+            }
+            weight[bi]++;
+        }
+
+        List<Integer> order = new ArrayList<>();
+        for (int i = 0; i < n; i++) order.add(i);
+        Collections.sort(order, (a, b) -> Integer.compare(weight[b], weight[a]));
+
+        for (int i = 0; i < count && i < order.size(); i++) {
+            result.add(base.get(order.get(i)));
+        }
+        return result;
+    }
+
+    /** 便捷重载：使用「默认渲染」逻辑 */
+    public static List<Integer> getTopWeightedColors(Bitmap imgBitmap, int count) {
+        return getTopWeightedColors(imgBitmap, "默认渲染", count);
+    }
+
+    /**
      * 精细化反差色逻辑：
      * 1. 寻找聚拢色块。
      * 2. 挖掘隐藏色，但【最多只替换两个】，防止喧宾夺主。

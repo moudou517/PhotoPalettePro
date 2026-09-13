@@ -40,6 +40,19 @@ public class AboutActivity extends AppCompatActivity {
             sb.append("• <b>自适应环境色：</b> 界面底色是基于调色板中最亮色生成的自适应灰阶，旨在模拟专业画廊的布光环境，减少长时间观看的疲劳。<br/>");
             sb.append("• <b>极简交互彩蛋：</b> 你正通过长按这种隐藏方式阅读这段文字。我们将复杂的设置深藏，只在主界面留下一张白纸、一份纯粹。<br/><br/>");
 
+            // --- 灵感来源 ---
+            sb.append("<b>【灵感来源 / Skill 致谢】</b><br/>");
+            sb.append("v2.0 的 Zine 明信片模式参考了两个开源的 Agent Skill（提示词规范），"
+                    + "本应用按它们的规范用原生 Java / Canvas 做了离线实现：<br/>");
+            sb.append("• <b>photo-to-zine-postcard</b> — 2:3 明信片正反面结构、暖象牙纸、"
+                    + "左侧元数据 + 主元素 + 色块的固定版式<br/>");
+            sb.append("<a href='https://github.com/Whiplashzeb/photo-to-zine-postcard'>"
+                    + "github.com/Whiplashzeb/photo-to-zine-postcard</a><br/>");
+            sb.append("• <b>photo-abstract-editorial</b> — 美术方向：克制的抽象短笔触、"
+                    + "保留原图方向与重心、不做完整插画与矢量描摹<br/>");
+            sb.append("<a href='https://github.com/kwhi6693-web/photo-abstract-editorial'>"
+                    + "github.com/kwhi6693-web/photo-abstract-editorial</a><br/><br/>");
+
             // --- 联系方式 ---
             sb.append("<b>【联系与支持】</b><br/>");
             sb.append("• <b>GitHub:</b> <a href='https://github.com/moudou517'>@moudou517</a> (欢迎 Star/交流)<br/>");
@@ -47,7 +60,7 @@ public class AboutActivity extends AppCompatActivity {
 
             sb.append("<b>【开发者信息】</b><br/>");
             sb.append("Build by <b>moudou517</b> with ❤️<br/>");
-            sb.append("v1.0.0-Stable (2026.05)");
+            sb.append("v2.0 (2026.09)");
 
             // 渲染 HTML
             content.setText(Html.fromHtml(sb.toString(), Html.FROM_HTML_MODE_COMPACT));
