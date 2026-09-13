@@ -407,6 +407,10 @@ public class MainActivity extends AppCompatActivity {
         zineBinding.btnFlipZine.setOnClickListener(v -> flipZineCard());
         zineBinding.zinePreviewCard.setOnClickListener(v -> flipZineCard());
 
+        // 增强现实开关：切换后标记明信片待重渲染（滑过去时渲染）
+        zineBinding.switchRealityAnchor.setOnCheckedChangeListener(
+                (buttonView, isChecked) -> markZineDirty());
+
         // ---------------- 两种模式共用 ----------------
         binding.btnImport.setOnClickListener(v -> {
             try {
@@ -452,6 +456,7 @@ public class MainActivity extends AppCompatActivity {
         cfg.date = zineBinding.etZineDate.getText().toString().trim();
         String index = zineBinding.etZineIndex.getText().toString().trim();
         cfg.index = index.isEmpty() ? "01" : index;
+        cfg.realityAnchor = zineBinding.switchRealityAnchor.isChecked();
         return cfg;
     }
 
@@ -465,6 +470,7 @@ public class MainActivity extends AppCompatActivity {
             o.put("location", zineBinding.etZineLocation.getText().toString());
             o.put("date", zineBinding.etZineDate.getText().toString());
             o.put("index", zineBinding.etZineIndex.getText().toString());
+            o.put("realityAnchor", zineBinding.switchRealityAnchor.isChecked());
             return o.toString();
         } catch (JSONException e) {
             Log.e(TAG, "打包明信片信息失败", e);
@@ -482,6 +488,9 @@ public class MainActivity extends AppCompatActivity {
             if (o.has("location")) zineBinding.etZineLocation.setText(o.optString("location", ""));
             if (o.has("date")) zineBinding.etZineDate.setText(o.optString("date", ""));
             if (o.has("index")) zineBinding.etZineIndex.setText(o.optString("index", ""));
+            if (o.has("realityAnchor")) {
+                zineBinding.switchRealityAnchor.setChecked(o.optBoolean("realityAnchor", false));
+            }
         } catch (JSONException e) {
             Log.e(TAG, "解析明信片信息失败", e);
         }

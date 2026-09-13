@@ -74,7 +74,7 @@ public final class ZinePostcardRenderer {
         Canvas canvas = new Canvas(out);
         PostcardPaper.paint(canvas, W, H, 20240517L);
 
-        drawMotif(canvas, photo, palette, W, H, 11L, true);
+        drawMotif(canvas, photo, palette, W, H, 11L, cfg.realityAnchor);
         drawMetadata(canvas, cfg, W, H);
         drawSwatches(canvas, photo, palette, W, H);
 
@@ -203,7 +203,7 @@ public final class ZinePostcardRenderer {
     // ====================================================================
 
     private static void drawMotif(Canvas canvas, Bitmap photo, List<Integer> palette,
-                                  int W, int H, long seed, boolean withPhotoAnchor) {
+                                  int W, int H, long seed, boolean realityAnchor) {
         if (photo == null || photo.isRecycled()) return;
 
         float left = W * MOTIF_LEFT;
@@ -215,7 +215,7 @@ public final class ZinePostcardRenderer {
         int h = Math.round(bottom - top);
         if (w <= 0 || h <= 0) return;
 
-        Bitmap motif = SceneMotifRenderer.render(photo, palette, w, h, seed, withPhotoAnchor);
+        Bitmap motif = SceneMotifRenderer.render(photo, palette, w, h, seed, realityAnchor);
         if (motif == null) return;
 
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);

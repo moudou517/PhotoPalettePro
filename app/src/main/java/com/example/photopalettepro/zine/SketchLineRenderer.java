@@ -30,8 +30,14 @@ public final class SketchLineRenderer {
 
     /** 边缘检测用的工作宽度 */
     private static final int DETECT_WIDTH = 300;
-    /** 只保留梯度强度前 18% 的像素。放宽比例＝保留更多高频结构，线稿更「有信息」 */
-    private static final float MAGNITUDE_PERCENTILE = 0.82f;
+    /**
+     * 只保留梯度强度前 10% 的像素。
+     *
+     * <p>插画要「简」：复杂照片只会得到更多笔触，而不是更好的插画，
+     * 所以这里宁可少画。<b>高频细节由「增强现实」嵌入的原照片负责</b>，
+     * 不靠堆线稿来补。
+     */
+    private static final float MAGNITUDE_PERCENTILE = 0.90f;
     /** 梯度强度的绝对下限，避免平坦图片产生满屏噪点 */
     private static final int MIN_THRESHOLD = 18;
 

@@ -17,23 +17,20 @@ import java.util.List;
 /**
  * 主元素合成器。
  *
- * <p>同时遵循两套 skill：
- * <ul>
- *   <li><b>photo-abstract-editorial</b>：主元素先读作克制的抽象——简笔线稿与平涂色块。</li>
- *   <li><b>gathered-scenes-zine · 实景拼贴</b>：在抽象之上补一层
- *       <b>真景锚点</b>（如实保留的照片，不做滤镜），两者以
- *       <b>手撕纤维边</b>相接，并引入
- *       <b>一个高纯度构成色</b>横跨这条接缝。</li>
- * </ul>
+ * <p>提供两种呈现，由 {@code ZinePostcardConfig.realityAnchor} 切换：
  *
- * <p>合成分层（由下至上）：
- * <pre>
- *   1. 插画场 · 平涂色块   —— 提纯后的原图色板，铺满主元素区
- *   2. 插画场 · 简笔线稿   —— 只保留结构，不描摹细节
- *   3. 真景锚点            —— 真实照片 + 手撕边（右、下两边撕裂）
- *   4. 构成色带            —— 从原图地平线延伸出来的一束高纯度色
- *   5. 外缘溶解            —— 整块主元素自然融进纸面
- * </pre>
+ * <h3>默认 · 纯插画</h3>
+ * 遵循 photo-abstract-editorial 的「先读作克制的抽象」：
+ * 简笔线稿压在一层取自原图的柔和平涂色块上，外缘溶解进纸面。
+ *
+ * <h3>增强现实（可选开关）</h3>
+ * 额外把<b>原始照片</b>嵌回插画里，用来补上插画必然丢失的高频细节：
+ * <ol>
+ *   <li>用<b>拉普拉斯算子</b>估算信息密度，找出细节最密集的区域（{@link InformationDensity}）；</li>
+ *   <li>把该区域对应的原始像素铺进去，保持与插画同一套坐标；</li>
+ *   <li>替换边缘用<b>大比例羽化</b>柔和过渡，不做生硬的硬切或撕纸边；</li>
+ *   <li>再加一束从地平线延伸出来的高纯度构成色，横跨这块嵌入区。</li>
+ * </ol>
  */
 public final class SceneMotifRenderer {
 
@@ -41,14 +38,26 @@ public final class SceneMotifRenderer {
     private static final float SATURATION_GAIN = 1.55f;
     private static final float VALUE_GAIN = 1.04f;
 
-    /** 平涂色块的不透明度。旧的 126 太淡，是「寡淡」的主因：插画要平，但不能是水洗过 */
-    private static final int MASS_ALPHA = 214;
+    /**
+     * 平涂色块的不透明度。保持接近上一版那种「纸面透得出来」的轻盈感，
+     * 颜色不够艳靠 {@link #SATURATION_GAIN} 提纯来解决，而不是靠堆不透明度。
+     */
+    private static final int MASS_ALPHA = 150;
 
-    /** 真景锚点占主元素区的比例。写实压得住，同时给插画留出足够的表现场 */
-    private static final float PHOTO_WIDTH_SHARE = 0.70f;
-    private static final float PHOTO_HEIGHT_SHARE = 0.74f;
+    /** 平涂的降采样除数：越大越"简"，细节被合并成越少的大形 */
+    private static final int FLATTEN_DIVISOR = 6;
 
-    /** 构成色带的高度与横向起点（相对主元素区） */
+    /** 增强现实：嵌入区域占整幅场景的比例 */
+    private static final float REALITY_WIDTH_SHARE = 0.60f;
+    private static final float REALITY_HEIGHT_SHARE = 0.56f;
+
+    /**
+     * 增强现实：替换边缘的羽化比例（占嵌入区短边）。
+     * 取得很大是刻意的——边缘必须柔化，不能生硬。
+     */
+    private static final float REALITY_EDGE_FEATHER = 0.28f;
+
+    /** 构成色带的高度与横向起点（相对场景） */
     private static final float BAND_HEIGHT_SHARE = 0.15f;
     private static final float BAND_LEFT_SHARE = 0.52f;
     private static final int BAND_PEAK_ALPHA = 214;
@@ -59,11 +68,11 @@ public final class SceneMotifRenderer {
     }
 
     /**
-     * @param withPhotoAnchor 是否绘制真景锚点。背面水印传 false，
-     *                        只保留线稿与平涂，避免水印出现一块照片。
+     * @param realityAnchor 是否启用「增强现实」——把原照片嵌入插画。
+     *                      背面水印固定传 false，只保留线稿与平涂。
      */
     public static Bitmap render(Bitmap photo, List<Integer> palette,
-                                int outW, int outH, long seed, boolean withPhotoAnchor) {
+                                int outW, int outH, long seed, boolean realityAnchor) {
         if (photo == null || photo.isRecycled() || outW <= 0 || outH <= 0) return null;
 
         RectF scene = fitInside(photo, outW, outH);
@@ -73,22 +82,12 @@ public final class SceneMotifRenderer {
         List<Integer> boosted = PostcardPalette.boostAll(palette, SATURATION_GAIN, VALUE_GAIN);
 
         drawFlatMasses(c, photo, boosted, scene);
+        drawSketchLines(c, photo, scene, seed);
 
-        int sceneW = Math.max(2, Math.round(scene.width()));
-        int sceneH = Math.max(2, Math.round(scene.height()));
-        Bitmap lines = SketchLineRenderer.render(photo, sceneW, sceneH, INK, seed);
-        if (lines != null) {
-            c.drawBitmap(lines, null, scene,
-                    new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG));
-        }
-
-        if (withPhotoAnchor) {
-            RectF panel = drawPhotoAnchor(c, photo, scene, seed);
-            // 让插画从撕纸接缝处「生长」到照片上，把两半连成一件事
-            if (lines != null) drawLinesEmerging(c, lines, scene, panel);
+        if (realityAnchor) {
+            drawRealityAnchor(c, photo, scene, seed);
             drawStructuralBand(c, photo, boosted, scene);
         }
-        if (lines != null && !lines.isRecycled()) lines.recycle();
 
         applyOuterDissolve(c, scene, outW, outH, seed);
         return canvas;
@@ -111,17 +110,28 @@ public final class SceneMotifRenderer {
         if (!masses.isRecycled()) masses.recycle();
     }
 
-    /** 把原图压成几块柔和平涂：量化到色板 → 连续降采样再放大。 */
+    /**
+     * 把原图压成几块柔和平涂。
+     *
+     * <p><b>顺序很重要</b>：先降采样把细节合并成大形，<b>再</b>量化到色板，
+     * 最后放大回来。如果反过来（先量化再缩放），缩放会在相邻色块之间插值出
+     * 大量中间色，结果是斑驳的色块而不是干净的平涂。
+     */
     private static Bitmap buildFlatMasses(Bitmap photo, List<Integer> palette, int w, int h) {
-        Bitmap work = Bitmap.createScaledBitmap(photo, w, h, true);
+        // 降采样要足够狠：把树、人群这类高频细节真正合并成"少量大形"，
+        // 否则量化后仍是一堆碎块，看起来是斑驳的色块而不是平涂
+        int cw = Math.max(2, w / FLATTEN_DIVISOR);
+        int ch = Math.max(2, h / FLATTEN_DIVISOR);
+
+        Bitmap work = Bitmap.createScaledBitmap(photo, cw, ch, true);
         if (!work.isMutable()) {
             Bitmap mutable = work.copy(Bitmap.Config.ARGB_8888, true);
             if (mutable != null) work = mutable;
         }
 
-        int count = w * h;
+        int count = cw * ch;
         int[] pixels = new int[count];
-        work.getPixels(pixels, 0, w, 0, 0, w, h);
+        work.getPixels(pixels, 0, cw, 0, 0, cw, ch);
         if (work != photo && !work.isRecycled()) work.recycle();
 
         List<Integer> colors = new ArrayList<>();
@@ -139,15 +149,11 @@ public final class SceneMotifRenderer {
         int[] flat = new int[count];
         for (int i = 0; i < count; i++) flat[i] = PostcardPalette.nearest(colors, pixels[i]);
 
-        Bitmap base = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        base.setPixels(flat, 0, w, 0, 0, w, h);
+        Bitmap base = Bitmap.createBitmap(cw, ch, Bitmap.Config.ARGB_8888);
+        base.setPixels(flat, 0, cw, 0, 0, cw, ch);
 
-        Bitmap half = Bitmap.createScaledBitmap(base, Math.max(2, w / 2), Math.max(2, h / 2), true);
-        if (half != base && !base.isRecycled()) base.recycle();
-        Bitmap third = Bitmap.createScaledBitmap(half, Math.max(2, w / 3), Math.max(2, h / 3), true);
-        if (third != half && !half.isRecycled()) half.recycle();
-        Bitmap soft = Bitmap.createScaledBitmap(third, w, h, true);
-        if (soft != third && !third.isRecycled()) third.recycle();
+        Bitmap soft = Bitmap.createScaledBitmap(base, w, h, true);
+        if (soft != base && !base.isRecycled()) base.recycle();
         return soft;
     }
 
@@ -155,56 +161,45 @@ public final class SceneMotifRenderer {
     //  2. 插画场 · 简笔线稿
     // ================================================================
 
-    /**
-     * 让线稿从撕纸接缝处渐显：接缝左侧不画（保持照片如实），
-     * 右侧逐渐显现。对应 skill 的「让插画从选定的撕裂段生长出来」。
-     */
-    private static void drawLinesEmerging(Canvas c, Bitmap lines, RectF scene, RectF panel) {
+    private static void drawSketchLines(Canvas c, Bitmap photo, RectF scene, long seed) {
         int w = Math.max(2, Math.round(scene.width()));
         int h = Math.max(2, Math.round(scene.height()));
 
-        Bitmap layer = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        Canvas lc = new Canvas(layer);
-        lc.drawBitmap(lines, null, new RectF(0, 0, w, h), null);
+        Bitmap lines = SketchLineRenderer.render(photo, w, h, INK, seed);
+        if (lines == null) return;
 
-        float seamX = panel.right - scene.left;
-        Paint fade = new Paint(Paint.ANTI_ALIAS_FLAG);
-        fade.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-        fade.setShader(new LinearGradient(
-                seamX - w * 0.34f, 0f, seamX + w * 0.08f, 0f,
-                new int[]{Color.argb(0, 255, 255, 255), Color.argb(210, 255, 255, 255)},
-                new float[]{0f, 1f}, Shader.TileMode.CLAMP));
-        lc.drawRect(0, 0, w, h, fade);
-
-        c.drawBitmap(layer, null, scene, new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG));
-        if (!layer.isRecycled()) layer.recycle();
+        c.drawBitmap(lines, null, scene, new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG));
+        if (!lines.isRecycled()) lines.recycle();
     }
 
     // ================================================================
-    //  3. 真景锚点（如实照片 + 手撕纤维边）
+    //  3. 增强现实：按信息密度嵌入原照片（柔边）
     // ================================================================
 
-    private static RectF drawPhotoAnchor(Canvas c, Bitmap photo, RectF scene, long seed) {
-        float panelW = scene.width() * PHOTO_WIDTH_SHARE;
-        float panelH = scene.height() * PHOTO_HEIGHT_SHARE;
-        RectF panel = new RectF(scene.left, scene.top, scene.left + panelW, scene.top + panelH);
+    private static void drawRealityAnchor(Canvas c, Bitmap photo, RectF scene, long seed) {
+        RectF relative = InformationDensity.densestRegion(
+                photo, REALITY_WIDTH_SHARE, REALITY_HEIGHT_SHARE);
+        RectF panel = new RectF(
+                scene.left + relative.left * scene.width(),
+                scene.top + relative.top * scene.height(),
+                scene.left + relative.right * scene.width(),
+                scene.top + relative.bottom * scene.height());
 
-        // 纤维毛边会伸出面板外，所以图层要留出余量
-        float pad = Math.min(panelW, panelH) * 0.05f;
-        int layerW = Math.max(4, Math.round(panelW + pad * 2));
-        int layerH = Math.max(4, Math.round(panelH + pad * 2));
+        // 羽化会伸出面板之外，图层要留足余量
+        float pad = Math.min(panel.width(), panel.height()) * REALITY_EDGE_FEATHER;
+        int layerW = Math.max(4, Math.round(panel.width() + pad * 2));
+        int layerH = Math.max(4, Math.round(panel.height() + pad * 2));
 
         Bitmap layer = Bitmap.createBitmap(layerW, layerH, Bitmap.Config.ARGB_8888);
         Canvas lc = new Canvas(layer);
 
-        RectF inner = new RectF(pad, pad, pad + panelW, pad + panelH);
-        // 关键：照片面板取「场景中对应位置的原始像素」，而不是居中裁切。
-        // 这样真景与插画共用同一套坐标，地平线/山脊能在撕纸接缝处对齐并延续，
-        // 否则会像两张互不相干的图拼在一起。
+        RectF inner = new RectF(pad, pad, pad + panel.width(), pad + panel.height());
+        // 取场景中对应位置的原始像素：与插画共用同一套坐标，内容自然衔接
         Rect source = sceneSubRect(photo, scene, panel);
-        lc.drawBitmap(photo, source, inner, new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG));
+        lc.drawBitmap(photo, source, inner,
+                new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG));
 
-        Bitmap mask = TornEdgeMask.torn(layerW, layerH, inner, true, true, seed);
+        Bitmap mask = TornEdgeMask.dissolve(layerW, layerH, inner, REALITY_EDGE_FEATHER, seed);
         Paint xfer = new Paint(Paint.ANTI_ALIAS_FLAG);
         xfer.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
         lc.drawBitmap(mask, 0, 0, xfer);
@@ -212,7 +207,6 @@ public final class SceneMotifRenderer {
 
         c.drawBitmap(layer, panel.left - pad, panel.top - pad, null);
         if (!layer.isRecycled()) layer.recycle();
-        return panel;
     }
 
     /** 面板在整幅场景中对应的原始像素区域（保持场景坐标，不做裁切重定位）。 */
@@ -241,7 +235,7 @@ public final class SceneMotifRenderer {
 
     /**
      * 从原图最强的水平结构（地平线）延伸出一束高纯度色，
-     * 横跨「照片 → 纸面」的接缝，承担视觉重心的作用。
+     * 横跨嵌入区与纸面，承担视觉重心。
      */
     private static void drawStructuralBand(Canvas c, Bitmap photo, List<Integer> palette, RectF scene) {
         int structural = PostcardPalette.structuralColor(palette, Color.rgb(206, 92, 62));

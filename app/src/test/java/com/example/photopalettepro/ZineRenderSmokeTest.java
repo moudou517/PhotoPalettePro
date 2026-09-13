@@ -99,7 +99,19 @@ public class ZineRenderSmokeTest {
         Bitmap front = ZinePostcardRenderer.renderFront(photo, palette, cfg, 1200);
         assertNotNull(front);
         writePng(front, new File(dir, "front-real.png"));
-        System.out.println("真实样张已渲染 -> build/zine-out/front-real.png");
+
+        // 增强现实：按拉普拉斯信息密度把原照片软边嵌回插画
+        ZinePostcardConfig arCfg = new ZinePostcardConfig();
+        arCfg.title = cfg.title;
+        arCfg.subtitle = cfg.subtitle;
+        arCfg.location = cfg.location;
+        arCfg.date = cfg.date;
+        arCfg.index = cfg.index;
+        arCfg.realityAnchor = true;
+        Bitmap augmented = ZinePostcardRenderer.renderFront(photo, palette, arCfg, 1200);
+        assertNotNull(augmented);
+        writePng(augmented, new File(dir, "front-real-ar.png"));
+        System.out.println("真实样张已渲染 -> front-real.png / front-real-ar.png");
     }
 
     private static String toHex(List<Integer> colors) {

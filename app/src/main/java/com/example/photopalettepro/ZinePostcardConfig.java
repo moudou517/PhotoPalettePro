@@ -19,6 +19,13 @@ public class ZinePostcardConfig {
     /** 小序号，默认 01 */
     public String index = "01";
 
+    /**
+     * 增强现实锚点：开启后，用拉普拉斯信息密度找到细节最密集的区域，
+     * 把原始照片以柔化边缘嵌入插画里。
+     * <p>默认关闭——默认呈现纯插画的简笔线稿。
+     */
+    public boolean realityAnchor = false;
+
     public ZinePostcardConfig() {
     }
 
