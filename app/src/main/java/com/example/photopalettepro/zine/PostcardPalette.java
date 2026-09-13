@@ -47,7 +47,10 @@ public final class PostcardPalette {
 
     /**
      * 选出「构成色」：色板里最鲜艳的一个，并把纯度推到一个明确的高位。
-     * 这就是 skill 要求的「一个高纯度色」，用来承担视觉重心，而不是当装饰。
+     *
+     * <p>当前渲染流程没有直接使用它——「色彩成结构」是通过
+     * {@link #boostAll} 对整条色板做适度提纯来承担的。
+     * 保留此方法是为了后续需要「一个明确的结构色」时可以取用。
      */
     public static int structuralColor(List<Integer> palette, int fallback) {
         if (palette == null || palette.isEmpty()) return fallback;

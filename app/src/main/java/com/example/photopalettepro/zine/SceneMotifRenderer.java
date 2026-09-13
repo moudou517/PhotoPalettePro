@@ -3,13 +3,11 @@ package com.example.photopalettepro.zine;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Shader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,11 +58,6 @@ public final class SceneMotifRenderer {
      */
     private static final float REALITY_EDGE_FEATHER = 0.28f;
 
-    /** 构成色带的高度与横向起点（相对场景） */
-    private static final float BAND_HEIGHT_SHARE = 0.15f;
-    private static final float BAND_LEFT_SHARE = 0.52f;
-    private static final int BAND_PEAK_ALPHA = 214;
-
     private static final int INK = Color.rgb(58, 54, 48);
 
     private SceneMotifRenderer() {
@@ -89,7 +82,6 @@ public final class SceneMotifRenderer {
 
         if (realityAnchor) {
             drawRealityAnchor(c, photo, scene, seed);
-            drawStructuralBand(c, photo, boosted, scene);
         }
 
         applyOuterDissolve(c, scene, outW, outH, seed);
@@ -233,70 +225,7 @@ public final class SceneMotifRenderer {
     }
 
     // ================================================================
-    //  4. 构成色带（色彩成结构）
-    // ================================================================
-
-    /**
-     * 从原图最强的水平结构（地平线）延伸出一束高纯度色，
-     * 横跨嵌入区与纸面，承担视觉重心。
-     */
-    private static void drawStructuralBand(Canvas c, Bitmap photo, List<Integer> palette, RectF scene) {
-        int structural = PostcardPalette.structuralColor(palette, Color.rgb(206, 92, 62));
-
-        float ratio = horizonRatio(photo);
-        float centerY = scene.top + scene.height() * ratio;
-        float bandH = scene.height() * BAND_HEIGHT_SHARE;
-        float left = scene.left + scene.width() * BAND_LEFT_SHARE;
-        float top = centerY - bandH / 2f;
-
-        int r = Color.red(structural);
-        int g = Color.green(structural);
-        int b = Color.blue(structural);
-
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setShader(new LinearGradient(0, top, 0, top + bandH,
-                new int[]{
-                        Color.argb(0, r, g, b),
-                        Color.argb(BAND_PEAK_ALPHA, r, g, b),
-                        Color.argb(0, r, g, b)},
-                new float[]{0f, 0.5f, 1f},
-                Shader.TileMode.CLAMP));
-        c.drawRect(left, top, scene.right, top + bandH, paint);
-    }
-
-    /** 找出原图最强的水平结构所在的相对行（0..1），作为构成色的来源位置。 */
-    private static float horizonRatio(Bitmap photo) {
-        int dw = 120;
-        int dh = Math.max(2, Math.round(dw * (float) photo.getHeight() / photo.getWidth()));
-
-        int[] pixels = new int[dw * dh];
-        Bitmap small = Bitmap.createScaledBitmap(photo, dw, dh, true);
-        small.getPixels(pixels, 0, dw, 0, 0, dw, dh);
-        if (small != photo && !small.isRecycled()) small.recycle();
-
-        int[] gray = new int[pixels.length];
-        for (int i = 0; i < pixels.length; i++) {
-            int p = pixels[i];
-            gray[i] = (int) (0.299f * Color.red(p) + 0.587f * Color.green(p) + 0.114f * Color.blue(p));
-        }
-
-        long best = -1;
-        int bestRow = dh / 2;
-        for (int y = 1; y < dh - 1; y++) {
-            long sum = 0;
-            for (int x = 0; x < dw; x++) {
-                sum += Math.abs(gray[(y + 1) * dw + x] - gray[(y - 1) * dw + x]);
-            }
-            if (sum > best) {
-                best = sum;
-                bestRow = y;
-            }
-        }
-        return (bestRow + 0.5f) / dh;
-    }
-
-    // ================================================================
-    //  5. 外缘溶解
+    //  4. 外缘溶解
     // ================================================================
 
     private static void applyOuterDissolve(Canvas c, RectF scene, int outW, int outH, long seed) {
