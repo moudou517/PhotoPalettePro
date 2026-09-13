@@ -34,15 +34,18 @@ import java.util.List;
  */
 public final class SceneMotifRenderer {
 
-    /** 提纯增益：k-means 质心天然偏灰，这里把纯度拉回来，解决「寡淡」 */
-    private static final float SATURATION_GAIN = 1.55f;
-    private static final float VALUE_GAIN = 1.04f;
+    /**
+     * 提纯增益：k-means 质心天然偏灰，需要把纯度拉回来，但**不能拉过头**——
+     * 1.55 会让画面偏浓郁，1.25 左右刚好「不发灰也不刺眼」。
+     */
+    private static final float SATURATION_GAIN = 1.25f;
+    private static final float VALUE_GAIN = 1.00f;
 
     /**
      * 平涂色块的不透明度。保持接近上一版那种「纸面透得出来」的轻盈感，
      * 颜色不够艳靠 {@link #SATURATION_GAIN} 提纯来解决，而不是靠堆不透明度。
      */
-    private static final int MASS_ALPHA = 150;
+    private static final int MASS_ALPHA = 140;
 
     /** 平涂的降采样除数：越大越"简"，细节被合并成越少的大形 */
     private static final int FLATTEN_DIVISOR = 6;
