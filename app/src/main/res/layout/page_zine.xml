@@ -187,22 +187,13 @@
 					android:minWidth="0dp"
 					app:switchPadding="4dp" />
 
-			<TextView
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:layout_marginTop="4dp"
-					android:text="关闭时为纯简笔插画；开启后用拉普拉斯算子在细节最密集处嵌入原照片，边缘柔化过渡。"
-					android:textSize="12sp"
-					android:textColor="@color/text_secondary"
-					android:lineSpacingExtra="2dp" />
-
 			<Button
 					android:id="@+id/btnGenerateZine"
 					android:layout_width="match_parent"
 					android:layout_height="50dp"
 					android:layout_marginTop="24dp"
 					android:background="@drawable/btn_primary_rounded"
-					android:text="生成 Zine 明信片"
+					android:text="生成明信片"
 					android:textColor="@color/white"
 					android:textAllCaps="false"
 					android:textStyle="bold" />
