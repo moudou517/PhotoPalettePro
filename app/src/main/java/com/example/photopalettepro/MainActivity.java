@@ -702,15 +702,17 @@ public class MainActivity extends AppCompatActivity {
         posterBinding.etAperture.setText(exifInfoManager.getAperture());
         posterBinding.etIso.setText(exifInfoManager.getIso());
 
-        // Zine 明信片：用 EXIF 预填 DATE / LOCATION（读不到就留空，绝不编造）
+        // Zine 明信片：用 EXIF 预填 DATE / LOCATION。
+        //
+        // 必须「无条件 setText」：这里以前加了「非空才写」的判断，
+        // 结果新照片没有 EXIF 日期/地点时分支不执行，
+        // 上一张照片留下的文字既没被清空、也没读入新值。
+        // 读不到就写空字符串 —— 留空是 skill 明确允许的，编造内容才不允许。
         String exifDate = exif == null ? null : exif.get("date");
-        if (exifDate != null && !exifDate.trim().isEmpty()) {
-            zineBinding.etZineDate.setText(exifDate);
-        }
+        zineBinding.etZineDate.setText(exifDate == null ? "" : exifDate.trim());
+
         String exifLocation = exif == null ? null : exif.get("location");
-        if (exifLocation != null && !exifLocation.trim().isEmpty()) {
-            zineBinding.etZineLocation.setText(exifLocation);
-        }
+        zineBinding.etZineLocation.setText(exifLocation == null ? "" : exifLocation.trim());
     }
 
     private void updateInfoFromUI() {
