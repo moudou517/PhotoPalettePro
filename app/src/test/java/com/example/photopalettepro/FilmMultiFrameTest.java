@@ -26,6 +26,8 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import com.example.photopalettepro.config.FilmBorderConfig;
+import com.example.photopalettepro.render.FilmBorderRenderer;
 
 /**
  * 胶片边框的多张排布。

@@ -11,6 +11,7 @@ import android.graphics.RectF;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.example.photopalettepro.config.ZinePostcardConfig;
 
 /**
  * 主元素合成器。

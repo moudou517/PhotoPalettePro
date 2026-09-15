@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import com.example.photopalettepro.util.ExifUtil;
 
 /**
  * 手机照片的「等效焦段」换算。

@@ -1,4 +1,4 @@
-package com.example.photopalettepro;
+package com.example.photopalettepro.render;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import com.example.photopalettepro.config.FilmBorderConfig;
+import com.example.photopalettepro.render.FilmBorderRenderer;
 
 /**
  * 胶片边框渲染入口：把一张或多张照片放进胶片里。
@@ -1123,7 +1125,7 @@ public final class FilmBorderRenderer {
      *
      * 于是空隙恒等于参数那一行自己的高度，字号怎么变都成立。
      */
-    static float[] captionBaselines(float textTop, float textH,
+    public static float[] captionBaselines(float textTop, float textH,
                                     Paint stockPaint, Paint specPaint,
                                     String stockText, String specText) {
         // 第一行仍在文字块的 44% 处：上面留出它的上伸部分

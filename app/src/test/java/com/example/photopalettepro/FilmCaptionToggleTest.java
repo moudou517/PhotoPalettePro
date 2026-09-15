@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import com.example.photopalettepro.config.FilmBorderConfig;
+import com.example.photopalettepro.render.FilmBorderRenderer;
 
 /**
  * 片边文字开关：关掉之后画布只留胶片。

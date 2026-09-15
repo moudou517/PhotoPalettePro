@@ -11,7 +11,7 @@ import android.view.animation.OvershootInterpolator;
  * UI 交互助手类
  * 职责：处理按钮按下动画等通用 UI 交互反馈
  */
-public class UIInteractionHelper {
+public class UiInteractionHelper {
 
     /**
      * 应用按压缩放动画

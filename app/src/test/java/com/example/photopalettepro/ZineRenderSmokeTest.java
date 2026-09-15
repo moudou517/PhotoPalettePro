@@ -21,6 +21,9 @@ import org.robolectric.annotation.GraphicsMode;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
+import com.example.photopalettepro.render.ColorExtractor;
+import com.example.photopalettepro.config.ZinePostcardConfig;
+import com.example.photopalettepro.render.ZinePostcardRenderer;
 
 /**
  * 用 Robolectric 的 NATIVE 图形模式（真实 Skia）渲染 Zine 明信片并导出 PNG，

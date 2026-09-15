@@ -1,9 +1,10 @@
-package com.example.photopalettepro;
+package com.example.photopalettepro.config;
 
 import com.example.photopalettepro.film.FilmStock;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.example.photopalettepro.config.FilmBorderConfig;
 
 /**
  * 胶片边框配置。

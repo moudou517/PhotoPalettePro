@@ -1,10 +1,13 @@
-package com.example.photopalettepro;
+package com.example.photopalettepro.render;
 
 import android.content.Context;
 import android.graphics.*;
 import android.util.Log;
 import java.util.List;
 import java.util.Map;
+import com.example.photopalettepro.util.PosterUtils;
+import com.example.photopalettepro.render.ColorExtractor;
+import com.example.photopalettepro.render.PosterRenderer;
 
 public class PosterRenderer {
 
@@ -51,7 +54,7 @@ public class PosterRenderer {
      * @param baseH 期望的画幅高（由上下留白反推），会被安全区约束修正
      * @return {@code {宽, 高}}
      */
-    static int[] fitPhotoSize(int imgW, int imgH, int baseH, int canvasW, int canvasH) {
+    public static int[] fitPhotoSize(int imgW, int imgH, int baseH, int canvasW, int canvasH) {
         if (imgW <= 0 || imgH <= 0 || canvasW <= 0 || canvasH <= 0) {
             return new int[]{1, 1};
         }
@@ -78,14 +81,14 @@ public class PosterRenderer {
     /**
      * 图片水平居中时的左边距。
      */
-    static int centeredX(int targetW, int canvasW) {
+    public static int centeredX(int targetW, int canvasW) {
         return Math.max(0, (canvasW - targetW) / 2);
     }
 
     /**
      * 图片垂直居中时的上边距。
      */
-    static int centeredY(int targetH, int canvasH) {
+    public static int centeredY(int targetH, int canvasH) {
         return Math.max(0, (canvasH - targetH) / 2);
     }
 

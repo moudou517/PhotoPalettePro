@@ -1025,3 +1025,42 @@ copies or substantial portions of the Software.
 三个 P 用玻璃质感（对应 `LiquidGlassDrawable` 的逻辑）：
 半透明白 `#D9FFFFFF` + 偏移投影 `#42000000` + 上沿高光 `#59FFFFFF`。
 半透明让底色透上来，所以 P 不会和背景割裂。
+
+---
+
+## 源码结构
+
+按**职责**分包，不再全平铺在根包：
+
+```
+com.example.photopalettepro/
+├── MainActivity.java          入口（留在根包，避免动 manifest）
+├── AboutActivity.java
+├── render/    渲染器     PosterRenderer / ZinePostcardRenderer / FilmBorderRenderer / ColorExtractor
+├── config/    配置模型   FilmBorderConfig / ZinePostcardConfig
+├── util/      无状态工具 ExifUtil / PosterUtils
+├── ui/        交互与视觉 AppDialog / PopupMenuHelper / HapticHelper / PullRefreshHelper /
+│                        TitleLongPressHelper / SwipeWatchLayout / CrashLogger / ExifInfoManager /
+│                        ImageProcessingHelper / ImageSaveHelper / GlassEffectHelper /
+│                        LiquidGlassDrawable / BackdropDrawable / UiInteractionHelper
+├── data/      Room       AppDatabase / ExportHistory / ExportHistoryDao / ExportHistoryRepository
+├── film/      胶片素材   FilmBase / FilmStock
+└── zine/      明信片     PostcardPaper / PostcardPalette / SceneMotifRenderer / …
+```
+
+（`helper/` 目录名保留——它同时装了 Helper、Drawable、Layout、Logger 四类东西，
+改成 `ui/` 更贴切，但那是纯改名、收益不大，暂不动。）
+
+### 拆分时踩到的两件事
+
+**一、包级私有方法跨包就不可见了**
+
+`ExifUtil` 里有几个 `static` 方法没写修饰符（默认包级私有），
+测试原来和它同包所以能直接调；移进 `util/` 之后立刻编译失败。
+**处理**：把这 8 个 `static` 放宽为 `public`（放宽访问权限不会破坏任何调用方）。
+
+**二、批量正则别把 `static {` 也改了**
+
+用正则把 `static` 提升为 `public static` 时，**静态初始化块** `static { … }`
+也被改成了 `public static { … }` —— 非法语法，编译直接报
+「非法的类型开始」。**处理**：正则加行尾 `{` 的排除，改完必须编译验证。

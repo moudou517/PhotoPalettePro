@@ -1,10 +1,12 @@
-package com.example.photopalettepro;
+package com.example.photopalettepro.util;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import com.example.photopalettepro.util.PosterUtils;
+import com.example.photopalettepro.render.PosterRenderer;
 
 public class PosterUtils {
 

@@ -29,7 +29,7 @@ import java.io.FileOutputStream;
  *
  * <p>起因：真机截图里「中间那块玻璃卡片的白色没有把内容全包进去」，
  * 但只看 XML 判断不出是哪一层的问题——运行时还有
- * {@code UIInteractionHelper.applyRoundedClip} 在改 outline 与裁剪，
+ * {@code UiInteractionHelper.applyRoundedClip} 在改 outline 与裁剪，
  * 光读布局是看不出结果的。
  *
  * <p>这里直接把 Activity 的 decorView 量好、布局好、画到一张位图上，

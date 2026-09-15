@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import com.example.photopalettepro.config.FilmBorderConfig;
+import com.example.photopalettepro.render.FilmBorderRenderer;
 
 /**
  * 用 Robolectric 的 NATIVE 图形模式（真实 Skia）渲染胶片边框并导出 PNG，

@@ -15,6 +15,8 @@ import org.robolectric.annotation.GraphicsMode;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.example.photopalettepro.config.FilmBorderConfig;
+import com.example.photopalettepro.render.FilmBorderRenderer;
 
 /**
  * 竖幅胶片的四周留白。

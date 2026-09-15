@@ -23,6 +23,7 @@ import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.List;
+import com.example.photopalettepro.config.FilmBorderConfig;
 
 /**
  * 导出历史的落库与回读（Room v4，含 filmJson 列）。

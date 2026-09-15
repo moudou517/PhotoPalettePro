@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+import com.example.photopalettepro.render.PosterRenderer;
 
 /**
  * 海报里照片的尺寸约束。

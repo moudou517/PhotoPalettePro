@@ -13,6 +13,7 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 
 import java.util.Random;
+import com.example.photopalettepro.render.FilmBorderRenderer;
 
 /**
  * 胶片「材料」层：台面 + 半透明片基 + 表面磨损。

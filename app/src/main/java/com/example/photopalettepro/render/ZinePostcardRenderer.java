@@ -1,4 +1,4 @@
-package com.example.photopalettepro;
+package com.example.photopalettepro.render;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -13,6 +13,9 @@ import com.example.photopalettepro.zine.SceneMotifRenderer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import com.example.photopalettepro.render.ColorExtractor;
+import com.example.photopalettepro.config.ZinePostcardConfig;
+import com.example.photopalettepro.render.ZinePostcardRenderer;
 
 /**
  * Zine 明信片渲染入口：4:3 横版，暖象牙纸。

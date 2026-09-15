@@ -1,6 +1,7 @@
 package com.example.photopalettepro.film;
 
 import android.graphics.Color;
+import com.example.photopalettepro.render.FilmBorderRenderer;
 
 /**
  * 胶片边框的「片基」预设。

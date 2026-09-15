@@ -1,4 +1,4 @@
-package com.example.photopalettepro;
+package com.example.photopalettepro.config;
 
 /**
  * Zine 明信片元数据配置

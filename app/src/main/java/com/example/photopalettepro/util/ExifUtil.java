@@ -1,4 +1,4 @@
-package com.example.photopalettepro;
+package com.example.photopalettepro.util;
 
 import android.content.Context;
 import android.net.Uri;
@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import com.example.photopalettepro.config.FilmBorderConfig;
+import com.example.photopalettepro.util.ExifUtil;
 
 public class ExifUtil {
 
@@ -752,7 +754,7 @@ public class ExifUtil {
     // ============================================================
 
     /** 35mm 画幅（36×24mm）的对角线长度，等效焦段的换算基准。 */
-    static final double FULL_FRAME_DIAGONAL_MM = 43.266;
+    public static final double FULL_FRAME_DIAGONAL_MM = 43.266;
 
     /** 传感器对角线的合理区间：1/3" 手机小底 ≈ 5.6mm，中画幅 645 ≈ 55mm，超出即认定反推失败。 */
     private static final double MIN_SENSOR_DIAGONAL_MM = 3.0;
@@ -814,7 +816,7 @@ public class ExifUtil {
      *
      * @return 对角线长度（mm）；参数不可用、单位不认识、或结果落在合理区间之外时返回 0
      */
-    static double sensorDiagonalMm(double planeXRes, double planeYRes, int unit,
+    public static double sensorDiagonalMm(double planeXRes, double planeYRes, int unit,
                                    int imageWidthPx, int imageHeightPx) {
         if (planeXRes <= 0 || planeYRes <= 0 || imageWidthPx <= 0 || imageHeightPx <= 0) return 0;
         // 只认英寸和厘米；单位不认识时一律不猜，否则会算出一个离谱的裁切系数
@@ -834,7 +836,7 @@ public class ExifUtil {
      *
      * @return 四舍五入后的等效焦距（mm）；参数不可用或结果不合理时返回 0
      */
-    static int equivalentFocalLength(double physicalMm, double sensorDiagonalMm) {
+    public static int equivalentFocalLength(double physicalMm, double sensorDiagonalMm) {
         if (physicalMm <= 0 || sensorDiagonalMm <= 0) return 0;
         int equivalent = (int) Math.round(physicalMm * FULL_FRAME_DIAGONAL_MM / sensorDiagonalMm);
         // 手机主摄等效焦段通常 13~120mm，超过 1200mm 只可能是算错了

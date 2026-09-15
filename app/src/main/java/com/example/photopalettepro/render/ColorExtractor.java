@@ -1,4 +1,4 @@
-package com.example.photopalettepro;
+package com.example.photopalettepro.render;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import com.example.photopalettepro.render.ColorExtractor;
 
 public class ColorExtractor {
 

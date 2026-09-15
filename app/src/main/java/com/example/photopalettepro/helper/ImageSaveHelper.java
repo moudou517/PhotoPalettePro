@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import android.media.MediaScannerConnection;
+import com.example.photopalettepro.render.PosterRenderer;
 
 /**
  * 图片保存助手类

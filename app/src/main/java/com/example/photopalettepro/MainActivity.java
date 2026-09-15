@@ -44,7 +44,7 @@ import com.example.photopalettepro.helper.LiquidGlassDrawable;
 import com.example.photopalettepro.helper.PopupMenuHelper;
 import com.example.photopalettepro.helper.PullRefreshHelper;
 import com.example.photopalettepro.helper.TitleLongPressHelper;
-import com.example.photopalettepro.helper.UIInteractionHelper;
+import com.example.photopalettepro.helper.UiInteractionHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,6 +57,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import com.example.photopalettepro.render.ColorExtractor;
+import com.example.photopalettepro.config.FilmBorderConfig;
+import com.example.photopalettepro.config.ZinePostcardConfig;
+import com.example.photopalettepro.util.ExifUtil;
+import com.example.photopalettepro.render.ZinePostcardRenderer;
+import com.example.photopalettepro.render.FilmBorderRenderer;
+import com.example.photopalettepro.render.PosterRenderer;
 
 /**
  * 主界面 Activity
@@ -1086,15 +1093,15 @@ public class MainActivity extends AppCompatActivity {
         // 和卡片内边距那一圈对不上，于是中间内容区亮、四周一圈偏灰，
         // 看起来就是「白色没有把内容包进去」。
         // 卡片的圆角由背景 drawable 自己负责，不需要再裁一次。
-        UIInteractionHelper.applyRoundedClip(posterBinding.imgPreview, 16f);
-        UIInteractionHelper.applyRoundedClip(zineBinding.imgZineCard, 16f);
-        UIInteractionHelper.applyRoundedClip(filmBinding.imgFilmPreview, 20f);
+        UiInteractionHelper.applyRoundedClip(posterBinding.imgPreview, 16f);
+        UiInteractionHelper.applyRoundedClip(zineBinding.imgZineCard, 16f);
+        UiInteractionHelper.applyRoundedClip(filmBinding.imgFilmPreview, 20f);
 
         installLiquidGlass();
 
         binding.getRoot().post(() -> {
             if (isFinishing() || isDestroyed() || binding == null) return;
-            UIInteractionHelper.applyPressAnimationBatch(
+            UiInteractionHelper.applyPressAnimationBatch(
                     posterBinding.btnGeneratePreview,
                     zineBinding.btnGenerateZine,
                     zineBinding.btnFlipZine,
