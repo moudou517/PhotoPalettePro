@@ -64,6 +64,7 @@ import com.example.photopalettepro.util.ExifUtil;
 import com.example.photopalettepro.render.ZinePostcardRenderer;
 import com.example.photopalettepro.render.FilmBorderRenderer;
 import com.example.photopalettepro.render.PosterRenderer;
+import com.example.photopalettepro.ui.PrivacyDialogFragment;
 
 /**
  * 主界面 Activity
@@ -2451,42 +2452,6 @@ public class MainActivity extends AppCompatActivity {
     private void showPrivacyDialog() {
         if (isFinishing() || isDestroyed()) return;
         new PrivacyDialogFragment().show(getSupportFragmentManager(), "PrivacyDialog");
-    }
-
-    public static class PrivacyDialogFragment extends DialogFragment {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            View dialogView = getLayoutInflater().inflate(R.layout.dialog_privacy, null);
-            builder.setView(dialogView);
-            builder.setCancelable(false);
-
-            AlertDialog dialog = builder.create();
-
-            dialogView.findViewById(R.id.btnAgree).setOnClickListener(v -> {
-                SharedPreferences prefs = getActivity().getSharedPreferences("app_settings", Context.MODE_PRIVATE);
-                prefs.edit().putBoolean("privacy_agreed", true).apply();
-                dialog.dismiss();
-            });
-
-            dialogView.findViewById(R.id.btnReject).setOnClickListener(v -> {
-                getActivity().finishAffinity();
-            });
-
-            dialog.setOnShowListener(dialogInterface -> {
-                if (dialog.getWindow() != null) {
-                    // 和选择弹窗同一块面板：四角圆角、上沿高光、发丝边——整套 UI 一套语言
-                    dialog.getWindow().setBackgroundDrawableResource(R.drawable.bg_popup_panel);
-                    dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
-                    dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                    dialog.setCanceledOnTouchOutside(false);
-                    dialog.setCancelable(false);
-                }
-            });
-
-            return dialog;
-        }
     }
 
     /**
