@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	选择弹窗里的一行。
+
+	两行文字：上面是给人看的名字，下面一句话说清它是干什么的。
+	以前只有一个光秃秃的词（还是用系统默认的 simple_list_item_1），
+	「默认渲染」「默认格式」这种名字既不知道是什么、也不知道选了会怎样。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  xmlns:tools="http://schemas.android.com/tools"
+			  android:layout_width="match_parent"
+			  android:layout_height="wrap_content"
+			  android:orientation="horizontal"
+			  android:gravity="center_vertical"
+			  android:background="@drawable/bg_row_selectable"
+			  android:paddingHorizontal="14dp"
+			  android:paddingVertical="12dp">
+
+	<LinearLayout
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:orientation="vertical">
+
+		<TextView
+				android:id="@+id/tvOptionTitle"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textColor="@color/text_main"
+				android:textSize="15sp"
+				tools:text="标准取色" />
+
+		<TextView
+				android:id="@+id/tvOptionSummary"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="3dp"
+				android:textColor="@color/text_secondary"
+				android:textSize="12sp"
+				android:lineSpacingExtra="2dp"
+				tools:text="聚类取色，最稳，适合大多数照片" />
+	</LinearLayout>
+
+	<ImageView
+			android:id="@+id/ivOptionCheck"
+			android:layout_width="20dp"
+			android:layout_height="20dp"
+			android:layout_marginStart="12dp"
+			android:src="@drawable/ic_check"
+			android:contentDescription="当前选中"
+			android:visibility="invisible" />
+</LinearLayout>

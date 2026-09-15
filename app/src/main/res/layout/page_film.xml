@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	模式三：胶片边框（与取色逻辑无关，独立于海报 / 明信片）
+
+	与取色页同样的版式：预览卡片固定在顶部，配置区在下面滚动。
+
+	注意预览用的是固定的 4:3 窗口 + fitCenter，而不是 adjustViewBounds——
+	胶片的成品长宽比随原图在横幅（≈4:3~16:9）与竖幅（≈2:3~9:16）之间大幅变化，
+	若让 ImageView 自己撑高度，一张竖幅照片会把固定区顶到半屏以上，
+	下面的配置区就没地方了。固定窗口能保证无论什么比例，版面高度都是恒定的。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  xmlns:app="http://schemas.android.com/apk/res-auto"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent"
+			  android:orientation="vertical">
+
+	<!-- 固定区：胶片边框预览 -->
+	<androidx.constraintlayout.widget.ConstraintLayout
+			android:id="@+id/filmPreviewCard"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="12dp"
+			android:layout_marginHorizontal="12dp"
+			android:padding="16dp"
+			android:background="@drawable/bg_glass_card"
+			android:elevation="4dp">
+
+		<ImageView
+				android:id="@+id/imgFilmPreview"
+				android:layout_width="0dp"
+				android:layout_height="0dp"
+				android:scaleType="fitCenter"
+				android:contentDescription="胶片边框预览"
+				app:layout_constraintDimensionRatio="4:3"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintTop_toTopOf="parent" />
+
+		<TextView
+				android:id="@+id/tvFilmEmptyHint"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:gravity="center"
+				android:text="导入照片后生成胶片边框"
+				android:textColor="@color/text_secondary"
+				app:layout_constraintStart_toStartOf="@id/imgFilmPreview"
+				app:layout_constraintEnd_toEndOf="@id/imgFilmPreview"
+				app:layout_constraintTop_toTopOf="@id/imgFilmPreview"
+				app:layout_constraintBottom_toBottomOf="@id/imgFilmPreview" />
+	</androidx.constraintlayout.widget.ConstraintLayout>
+
+	<!-- 滚动区：边框配置 -->
+	<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+			android:id="@+id/filmSwipeRefresh"
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="1"
+			android:layout_marginTop="12dp">
+
+		<androidx.core.widget.NestedScrollView
+				android:id="@+id/filmScrollView"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:overScrollMode="always">
+
+			<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:orientation="vertical"
+					android:paddingBottom="12dp">
+
+				<!-- 边框配置 -->
+				<LinearLayout
+						android:id="@+id/filmConfigCard"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:orientation="vertical"
+						android:layout_marginHorizontal="12dp"
+						android:padding="8dp"
+						android:background="@drawable/bg_glass_card"
+						android:elevation="2dp">
+
+					<TextView
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:paddingHorizontal="12dp"
+							android:paddingTop="12dp"
+							android:paddingBottom="14dp"
+							android:text="胶片边框"
+							android:textStyle="bold"
+							android:textSize="16sp"
+							android:textColor="@color/text_main" />
+
+					<TextView
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="6dp"
+							android:layout_marginBottom="18dp"
+							android:text="把照片放进 135 胶片：片基 + 齿孔 + 片边文字。照片按原比例完整嵌入，不裁切、不拉伸。单张时横幅齿孔在上下、竖幅在左右；多张合成时自动排成横版，竖幅会像半格胶片一样变窄。"
+							android:textSize="12sp"
+							android:textColor="@color/text_secondary"
+							android:lineSpacingExtra="2dp" />
+
+					<Button
+							android:id="@+id/btnPickFilmPhotos"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:layout_marginHorizontal="12dp"
+							android:background="@drawable/btn_primary_rounded"
+							android:text="选择照片（可多选）"
+							android:textColor="@color/white"
+							android:textAllCaps="false"
+							android:textSize="15sp" />
+
+					<TextView
+							android:id="@+id/tvFilmPhotoCount"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="8dp"
+							android:text="未选择照片 · 最多 18 张"
+							android:textSize="12sp"
+							android:textColor="@color/text_secondary" />
+
+					<View
+							android:layout_width="match_parent"
+							android:layout_height="1dp"
+							android:layout_marginHorizontal="12dp"
+							android:background="@color/divider_color"
+							android:layout_marginVertical="18dp" />
+
+					<LinearLayout
+							android:id="@+id/containerSelectFilmStyle"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:orientation="vertical"
+							android:clickable="true"
+							android:focusable="true"
+							android:background="@drawable/bg_row_selectable"
+							android:paddingHorizontal="12dp"
+							android:paddingVertical="12dp">
+						<TextView
+								android:id="@+id/tvFilmStyle"
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="经典白框"
+								android:textSize="17sp"
+								android:textColor="@color/text_main" />
+						<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="胶片风格"
+								android:textSize="13sp"
+								android:textColor="@color/text_secondary"
+								android:layout_marginTop="2dp" />
+					</LinearLayout>
+
+					<View
+							android:layout_width="match_parent"
+							android:layout_height="1dp"
+							android:layout_marginHorizontal="12dp"
+							android:background="@color/divider_color"
+							android:layout_marginVertical="8dp" />
+
+					<LinearLayout
+							android:id="@+id/containerSelectFilmWidth"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:orientation="vertical"
+							android:clickable="true"
+							android:focusable="true"
+							android:background="@drawable/bg_row_selectable"
+							android:paddingHorizontal="12dp"
+							android:paddingVertical="12dp">
+						<TextView
+								android:id="@+id/tvFilmWidth"
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="标准边框"
+								android:textSize="17sp"
+								android:textColor="@color/text_main" />
+						<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="边框宽度"
+								android:textSize="13sp"
+								android:textColor="@color/text_secondary"
+								android:layout_marginTop="2dp" />
+					</LinearLayout>
+
+					<com.google.android.material.switchmaterial.SwitchMaterial
+							android:id="@+id/switchFilmCaption"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="14dp"
+							android:checked="true"
+							android:text="显示片边文字"
+							android:textColor="@color/text_main"
+							android:textSize="14sp"
+							android:minHeight="0dp"
+							android:minWidth="0dp"
+							app:switchPadding="4dp" />
+
+					<com.google.android.material.switchmaterial.SwitchMaterial
+							android:id="@+id/switchFilmFrameNumber"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="8dp"
+							android:checked="true"
+							android:text="显示帧号"
+							android:textColor="@color/text_main"
+							android:textSize="14sp"
+							android:minHeight="0dp"
+							android:minWidth="0dp"
+							app:switchPadding="4dp" />
+
+					<View
+							android:layout_width="match_parent"
+							android:layout_height="1dp"
+							android:layout_marginHorizontal="12dp"
+							android:background="@color/divider_color"
+							android:layout_marginVertical="20dp" />
+
+					<TextView
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="12dp"
+							android:text="片边文字"
+							android:textStyle="bold"
+							android:textSize="14sp"
+							android:textColor="@color/text_main" />
+
+					<TextView
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="6dp"
+							android:text="已按 EXIF 自动预填；手机照片的镜头会换算成等效焦段。留空或删空的字段会自动用胶片装饰文案补齐，片上不会出现空白。"
+							android:textSize="12sp"
+							android:textColor="@color/text_secondary"
+							android:lineSpacingExtra="2dp" />
+
+					<EditText
+							android:id="@+id/etFilmStock"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="12dp"
+							android:background="@drawable/bg_edittext_rounded"
+							android:hint="胶片型号（例如 PORTRA 400）"
+							android:textColor="@color/text_main"
+							android:textColorHint="@color/text_secondary"
+							android:paddingHorizontal="12dp"
+							android:textSize="14sp"
+							android:inputType="textCapCharacters"
+							android:singleLine="true" />
+
+					<EditText
+							android:id="@+id/etFilmCamera"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="10dp"
+							android:background="@drawable/bg_edittext_rounded"
+							android:hint="机身"
+							android:textColor="@color/text_main"
+							android:textColorHint="@color/text_secondary"
+							android:paddingHorizontal="12dp"
+							android:textSize="14sp"
+							android:inputType="text"
+							android:singleLine="true" />
+
+					<EditText
+							android:id="@+id/etFilmLens"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="10dp"
+							android:background="@drawable/bg_edittext_rounded"
+							android:hint="镜头"
+							android:textColor="@color/text_main"
+							android:textColorHint="@color/text_secondary"
+							android:paddingHorizontal="12dp"
+							android:textSize="14sp"
+							android:inputType="text"
+							android:singleLine="true" />
+
+					<LinearLayout
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:orientation="horizontal"
+							android:weightSum="5"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="10dp">
+
+						<EditText
+								android:id="@+id/etFilmExposure"
+								android:layout_width="0dp"
+								android:layout_height="48dp"
+								android:layout_weight="3"
+								android:layout_marginEnd="6dp"
+								android:background="@drawable/bg_edittext_rounded"
+								android:hint="快门 · 光圈 · ISO"
+								android:textColor="@color/text_main"
+								android:textColorHint="@color/text_secondary"
+								android:paddingHorizontal="10dp"
+								android:textSize="13sp"
+								android:inputType="text"
+								android:singleLine="true" />
+
+						<EditText
+								android:id="@+id/etFilmDate"
+								android:layout_width="0dp"
+								android:layout_height="48dp"
+								android:layout_weight="2"
+								android:background="@drawable/bg_edittext_rounded"
+								android:hint="日期"
+								android:textColor="@color/text_main"
+								android:textColorHint="@color/text_secondary"
+								android:paddingHorizontal="10dp"
+								android:textSize="13sp"
+								android:inputType="text"
+								android:singleLine="true" />
+					</LinearLayout>
+
+					<Button
+							android:id="@+id/btnGenerateFilm"
+							android:layout_width="match_parent"
+							android:layout_height="50dp"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="24dp"
+							android:background="@drawable/btn_primary_rounded"
+							android:text="生成胶片边框"
+							android:textColor="@color/white"
+							android:textAllCaps="false"
+							android:textStyle="bold" />
+				</LinearLayout>
+			</LinearLayout>
+		</androidx.core.widget.NestedScrollView>
+	</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+</LinearLayout>
+
+
+

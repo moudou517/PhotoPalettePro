@@ -40,9 +40,18 @@ public class AboutActivity extends AppCompatActivity {
             sb.append("• <b>自适应环境色：</b> 界面底色是基于调色板中最亮色生成的自适应灰阶，旨在模拟专业画廊的布光环境，减少长时间观看的疲劳。<br/>");
             sb.append("• <b>极简交互彩蛋：</b> 你正通过长按这种隐藏方式阅读这段文字。我们将复杂的设置深藏，只在主界面留下一张白纸、一份纯粹。<br/><br/>");
 
+            // --- 3.0 新增 ---
+            sb.append("<b>【v3.0 新增 · 胶片边框】</b><br/>");
+            sb.append("• <b>真实的 135 规格：</b> 齿孔、节距、片基留边全部按柯达 KS 标准反推"
+                    + "（4.75mm 节距 / 1.98×2.79mm 片孔），一格永远是 8 个孔。<br/>");
+            sb.append("• <b>胶片是半透明的：</b> 片基按 84% 不透明度绘制，齿孔是真正镂空的，"
+                    + "台面从孔里透上来——孔与片基的明度差就是这么来的。<br/>");
+            sb.append("• <b>多张合成：</b> 最多 18 张自动排成半格胶片版式，整体保持横版；"
+                    + "画幅两侧各留一个片孔长度的边，不顶着剪口。<br/><br/>");
+
             // --- 灵感来源 ---
             sb.append("<b>【灵感来源 / Skill 致谢】</b><br/>");
-            sb.append("v2.0 的 Zine 明信片模式参考了两个开源的 Agent Skill（提示词规范），"
+            sb.append("Zine 明信片模式参考了两个开源的 Agent Skill（提示词规范），"
                     + "本应用按它们的规范用原生 Java / Canvas 做了离线实现：<br/>");
             sb.append("• <b>photo-to-zine-postcard</b> — 2:3 明信片正反面结构、暖象牙纸、"
                     + "左侧元数据 + 主元素 + 色块的固定版式<br/>");
@@ -64,7 +73,7 @@ public class AboutActivity extends AppCompatActivity {
 
             sb.append("<b>【开发者信息】</b><br/>");
             sb.append("Build by <b>moudou517</b> with ❤️<br/>");
-            sb.append("v2.0 (2026.09)");
+            sb.append("v3.0 (2026.09)");
 
             // 渲染 HTML
             content.setText(Html.fromHtml(sb.toString(), Html.FROM_HTML_MODE_COMPACT));

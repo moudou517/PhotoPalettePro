@@ -1,32 +1,19 @@
-# ---------- Gradle / Android 构建产物 ----------
+# 构建产物
+build/
+app/build/
 .gradle/
-/build/
-**/build/
+*.apk
+*.aab
 
-# ---------- 本地配置（含签名与 SDK 路径，绝不能提交） ----------
-local.properties
-*.p12
-*.jks
-*.keystore
+# 临时文件
+.git-commit-msg.tmp
+*.tmp
 
-# ---------- IDE ----------
+# IDE
 .idea/
 *.iml
-.externalNativeBuild
-.cxx/
+local.properties
 
-# ---------- 操作系统 ----------
+# 系统
 .DS_Store
 Thumbs.db
-
-# ---------- 日志与缓存 ----------
-*.log
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-ENV/
-
-# ---------- 本地 Agent 配置（含 API Key，绝不能提交） ----------
-.continue/

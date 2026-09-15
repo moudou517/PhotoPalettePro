@@ -54,18 +54,54 @@
 	<!-- ============================================
 		iOS 玻璃拟态 (Glassmorphism) 扩展色（夜间）
 	============================================ -->
-	<!-- 玻璃卡片表面：深色半透明，透出背景氛围 -->
-	<color name="glass_card_top">#66161B22</color>
-	<color name="glass_card_bottom">#40161B22</color>
+	<!--
+		玻璃卡片表面：和日间同一套结构（三段，顶边一档高光），
+		只是把"面"换成深色半透明。
+	-->
+	<color name="glass_card_top">#B8161B22</color>
+	<color name="glass_card_mid">#A8161B22</color>
+	<color name="glass_card_bottom">#8F161B22</color>
 	<!-- 顶部/底部悬浮栏的玻璃表面 -->
-	<color name="glass_bar_top">#66161B22</color>
-	<color name="glass_bar_bottom">#4D161B22</color>
+	<color name="glass_bar_top">#C4161B22</color>
+	<color name="glass_bar_mid">#B4161B22</color>
+	<color name="glass_bar_bottom">#A0161B22</color>
 	<!-- 玻璃高光描边（夜间用极淡白） -->
-	<color name="glass_border">#1FFFFFFF</color>
-	<color name="glass_highlight">#14FFFFFF</color>
+	<color name="glass_border">#2EFFFFFF</color>
+	<color name="glass_highlight">#33FFFFFF</color>
+	<color name="ripple_tint">#3360A5FA</color>
 	<!-- 页面柔和渐变背景 -->
 	<color name="bg_gradient_start">#0A0D14</color>
 	<color name="bg_gradient_mid">#0D1117</color>
 	<color name="bg_gradient_end">#0B1220</color>
 	
+	<!-- 背景色雾：玻璃折射的对象 -->
+	<color name="bg_blob_blue">#3D4A7BC8</color>
+	<color name="bg_blob_green">#3D2F8F72</color>
+	<color name="bg_blob_warm">#3D8A6A3C</color>
+	<!-- 液态玻璃的整片白（/黑）玻璃：比卡片底色更透，背景要看得出 -->
+	<color name="glass_liquid_tint">#6B161B22</color>
+	<color name="button_gradient_start">#4F6BFF</color>
+	<color name="button_gradient_center">#5B54F0</color>
+	<color name="button_gradient_end">#7A3FE0</color>
+	<color name="button_gradient_start_deep">#3B49D8</color>
+	<color name="button_gradient_center_deep">#4A3FD0</color>
+	<color name="button_gradient_end_deep">#6030BC</color>
+	<!-- 页码点的反差描边：压在蓝按钮上也能看出边界 -->
+	<color name="indicator_halo">#8CFFFFFF</color>
+
+	<!-- ============================================
+		选择弹窗的面板：几乎实底，保证可读性
+	============================================ -->
+	<color name="popup_panel_top">#F21A2029</color>
+	<color name="popup_panel_mid">#ED1A2029</color>
+	<color name="popup_panel_bottom">#E81A2029</color>
+
 </resources>
+
+
+
+
+
+
+
+

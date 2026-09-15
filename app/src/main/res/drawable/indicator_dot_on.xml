@@ -1,6 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-	   android:shape="oval">
-	<solid android:color="@color/primary_blue" />
-	<size android:width="9dp" android:height="9dp" />
-</shape>
+<!--
+	当前页的点。
+
+	外面那圈浅描边是【反差机制】：胶囊浮在可滚动内容之上，
+	底下可能是蓝按钮、暖色卡片、明信片、照片……内容一直在动，
+	只要点的颜色固定，就总有一天会撞上去。
+
+	给点加一圈对冲色的环之后，压在深底上是「亮点 + 更亮的环」、
+	压在浅底上是「深点 + 浅环」，永远有边界可辨——
+	不用采样、不用每帧读像素，滚动时零开销。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+	<item>
+		<shape android:shape="oval">
+			<solid android:color="@android:color/transparent" />
+			<stroke android:width="1.5dp" android:color="@color/indicator_halo" />
+			<size android:width="11dp" android:height="11dp" />
+		</shape>
+	</item>
+	<item
+			android:left="2dp"
+			android:top="2dp"
+			android:right="2dp"
+			android:bottom="2dp">
+		<shape android:shape="oval">
+			<solid android:color="@color/primary_blue" />
+		</shape>
+	</item>
+</layer-list>

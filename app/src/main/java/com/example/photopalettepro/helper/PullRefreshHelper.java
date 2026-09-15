@@ -41,9 +41,21 @@ public class PullRefreshHelper {
     public void setup() {
         setupColorScheme();
         setupProgressViewOffset();
-        setupDampingAnimation();
         setupRefreshListener();
     }
+
+    // ------------------------------------------------------------------
+    //  为什么删掉了「阻尼动画」
+    //
+    //  原来这里给 NestedScrollView 挂了 onTouchListener：下拉时额外
+    //  setTranslationY(offset * 0.5f)，松手再用 OvershootInterpolator 弹回。
+    //  问题是 SwipeRefreshLayout 自己就会把子视图按手指 1:1 拖着走——
+    //  两层位移叠在一起，卡片走得比手指快、松手还要多弹一下，
+    //  手感就变成「上面那块占位卡住 + 不跟手」。
+    //
+    //  交给 SwipeRefreshLayout 全权处理：跟手是它的默认行为，
+    //  回弹也是最标准的那条曲线，不需要我们再插一手。
+    // ------------------------------------------------------------------
 
     private void setupColorScheme() {
         swipeRefreshLayout.setColorSchemeColors(
@@ -99,6 +111,9 @@ public class PullRefreshHelper {
 
     private void setupRefreshListener() {
         swipeRefreshLayout.setOnRefreshListener(() -> {
+            // 真正触发刷新时给一下触感：手指在屏幕上时，震动比转圈更早被感知到
+            HapticHelper.refreshTriggered(swipeRefreshLayout);
+
             if (refreshCallback.canRefresh()) {
                 refreshCallback.onRefresh();
                 new Handler().postDelayed(() -> {

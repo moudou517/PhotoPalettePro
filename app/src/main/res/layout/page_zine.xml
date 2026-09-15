@@ -1,203 +1,249 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 模式二：Zine 明信片（4:3 横版 · 遵循 photo-abstract-editorial 的美术方向） -->
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-		xmlns:android="http://schemas.android.com/apk/res/android"
-		xmlns:app="http://schemas.android.com/apk/res-auto"
-		android:id="@+id/zineSwipeRefresh"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent">
+<!--
+	模式一：Zine 明信片（4:3 横版 · 遵循 photo-abstract-editorial 的美术方向）
 
-	<androidx.core.widget.NestedScrollView
-			android:id="@+id/zineScrollView"
+	版式与取色页（page_poster.xml）保持一致：最上面显示渲染效果的预览卡片<b>固定在顶部</b>，
+	下面才是可滚动的配置区。这样用户填标题、改设定时，成品始终留在视野里——
+	明信片是「边填边看」的东西，预览跟着滚走就没法对着调了。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  xmlns:app="http://schemas.android.com/apk/res-auto"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent"
+			  android:orientation="vertical">
+
+	<!-- 固定区：明信片预览（4:3 横版，点击卡片本身即可翻面） -->
+	<androidx.constraintlayout.widget.ConstraintLayout
+			android:id="@+id/zinePreviewCard"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:overScrollMode="always">
+			android:layout_height="wrap_content"
+			android:layout_marginTop="12dp"
+			android:layout_marginHorizontal="12dp"
+			android:padding="16dp"
+			android:background="@drawable/bg_glass_card"
+			android:elevation="4dp">
 
-		<LinearLayout
-				android:layout_width="match_parent"
+		<ImageView
+				android:id="@+id/imgZineCard"
+				android:layout_width="0dp"
+				android:layout_height="0dp"
+				android:scaleType="fitCenter"
+				android:contentDescription="Zine 明信片预览"
+				app:layout_constraintDimensionRatio="4:3"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintTop_toTopOf="parent" />
+
+		<TextView
+				android:id="@+id/tvZineEmptyHint"
+				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:orientation="vertical"
-				android:paddingBottom="12dp">
+				android:gravity="center"
+				android:text="导入照片后生成 Zine 明信片"
+				android:textColor="@color/text_secondary"
+				app:layout_constraintStart_toStartOf="@id/imgZineCard"
+				app:layout_constraintEnd_toEndOf="@id/imgZineCard"
+				app:layout_constraintTop_toTopOf="@id/imgZineCard"
+				app:layout_constraintBottom_toBottomOf="@id/imgZineCard" />
+	</androidx.constraintlayout.widget.ConstraintLayout>
 
-		<!-- 明信片预览：4:3 横版，点击或按钮可翻面 -->
-		<androidx.constraintlayout.widget.ConstraintLayout
-				android:id="@+id/zinePreviewCard"
+
+	<!--
+		翻面按钮：正面 / 背面。
+
+		它【固定在页面上】，不随滑块滚动。
+		放进滑块里试过：它会压在配置卡上，而且得先滚动才能用——
+		翻面是高频的查看动作，应该随时够得着。
+
+		和预览卡、配置卡一样，上下各留 12dp，三块之间间距一致。
+
+		backgroundTint="@null"：AppCompat 的 Button 默认叠一层主题色 tint，
+		自定义背景会被染上蓝边——白天看不出，夜间深色玻璃上一衬就很明显。
+	-->
+	<Button
+			android:id="@+id/btnFlipZine"
+			android:layout_width="match_parent"
+			android:layout_height="48dp"
+			android:layout_marginHorizontal="12dp"
+			android:layout_marginTop="12dp"
+			android:background="@drawable/btn_primary_rounded"
+			android:backgroundTint="@null"
+			android:text="翻面查看背面"
+			android:textColor="@color/white"
+			android:textAllCaps="false"
+			android:textStyle="bold"
+			android:textSize="15sp" />
+
+	<!-- 滚动区：翻面按钮 + 明信片信息 -->
+	<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+			android:id="@+id/zineSwipeRefresh"
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_weight="1"
+			android:layout_marginTop="12dp">
+
+		<androidx.core.widget.NestedScrollView
+				android:id="@+id/zineScrollView"
 				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="12dp"
-				android:layout_marginHorizontal="12dp"
-				android:padding="16dp"
-				android:background="@drawable/bg_glass_card"
-				android:elevation="4dp">
-
-			<ImageView
-					android:id="@+id/imgZineCard"
-					android:layout_width="0dp"
-					android:layout_height="0dp"
-					android:scaleType="fitCenter"
-					android:contentDescription="Zine 明信片预览"
-					app:layout_constraintDimensionRatio="4:3"
-					app:layout_constraintStart_toStartOf="parent"
-					app:layout_constraintEnd_toEndOf="parent"
-					app:layout_constraintTop_toTopOf="parent" />
-
-			<TextView
-					android:id="@+id/tvZineEmptyHint"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:gravity="center"
-					android:text="导入照片后生成 Zine 明信片"
-					android:textColor="@color/text_secondary"
-					app:layout_constraintStart_toStartOf="@id/imgZineCard"
-					app:layout_constraintEnd_toEndOf="@id/imgZineCard"
-					app:layout_constraintTop_toTopOf="@id/imgZineCard"
-					app:layout_constraintBottom_toBottomOf="@id/imgZineCard" />
-		</androidx.constraintlayout.widget.ConstraintLayout>
-
-		<!-- 翻面按钮：正面 / 背面 -->
-		<Button
-				android:id="@+id/btnFlipZine"
-				android:layout_width="match_parent"
-				android:layout_height="48dp"
-				android:layout_marginTop="12dp"
-				android:layout_marginHorizontal="12dp"
-				android:background="@drawable/bg_glass_bar"
-				android:text="翻面查看背面"
-				android:textColor="@color/text_main"
-				android:textAllCaps="false"
-				android:textSize="15sp" />
-
-		<!-- 明信片信息 -->
-		<LinearLayout
-				android:id="@+id/zineConfigCard"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:orientation="vertical"
-				android:layout_marginTop="12dp"
-				android:layout_marginHorizontal="12dp"
-				android:padding="20dp"
-				android:background="@drawable/bg_glass_card"
-				android:elevation="2dp">
-
-			<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="明信片信息"
-					android:textStyle="bold"
-					android:textSize="16sp"
-					android:textColor="@color/text_main" />
-
-			<TextView
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:layout_marginTop="6dp"
-					android:layout_marginBottom="18dp"
-					android:text="4:3 横版 · 左侧元数据 + 右下简笔线稿主元素 + 6 个方形色块（完整保留主页面当前取色逻辑的色板，按权重排序）。地点与日期已按 EXIF 预填，读不到时留空。"
-					android:textSize="12sp"
-					android:textColor="@color/text_secondary"
-					android:lineSpacingExtra="2dp" />
-
-			<EditText
-					android:id="@+id/etZineTitle"
-					android:layout_width="match_parent"
-					android:layout_height="48dp"
-					android:background="@drawable/bg_edittext_rounded"
-					android:hint="标题（会以大写 + 字距排版）"
-					android:textColor="@color/text_main"
-					android:textColorHint="@color/text_secondary"
-					android:paddingHorizontal="12dp"
-					android:textSize="14sp"
-					android:inputType="text"
-					android:singleLine="true" />
-
-			<EditText
-					android:id="@+id/etZineSubtitle"
-					android:layout_width="match_parent"
-					android:layout_height="48dp"
-					android:background="@drawable/bg_edittext_rounded"
-					android:hint="副标题（可选，斜体）"
-					android:textColor="@color/text_main"
-					android:textColorHint="@color/text_secondary"
-					android:paddingHorizontal="12dp"
-					android:textSize="14sp"
-					android:layout_marginTop="10dp"
-					android:inputType="text"
-					android:singleLine="true" />
+				android:layout_height="match_parent"
+				android:overScrollMode="always">
 
 			<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:orientation="horizontal"
-					android:weightSum="2"
-					android:layout_marginTop="10dp">
+					android:orientation="vertical"
+					android:paddingBottom="12dp">
 
-				<EditText
-						android:id="@+id/etZineLocation"
-						android:layout_width="0dp"
-						android:layout_height="48dp"
-						android:layout_weight="1"
-						android:layout_marginEnd="6dp"
-						android:background="@drawable/bg_edittext_rounded"
-						android:hint="LOCATION 地点"
-						android:textColor="@color/text_main"
-						android:textColorHint="@color/text_secondary"
-						android:paddingHorizontal="12dp"
-						android:textSize="13sp"
-						android:singleLine="true" />
 
-				<EditText
-						android:id="@+id/etZineDate"
-						android:layout_width="0dp"
-						android:layout_height="48dp"
-						android:layout_weight="1"
-						android:background="@drawable/bg_edittext_rounded"
-						android:hint="DATE 日期"
-						android:textColor="@color/text_main"
-						android:textColorHint="@color/text_secondary"
-						android:paddingHorizontal="12dp"
-						android:textSize="13sp"
-						android:singleLine="true" />
+
+				<!-- 明信片信息 -->
+				<LinearLayout
+						android:id="@+id/zineConfigCard"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:orientation="vertical"
+						
+						android:layout_marginHorizontal="12dp"
+						android:padding="8dp"
+						android:background="@drawable/bg_glass_card"
+						android:elevation="2dp">
+
+
+					<TextView
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:paddingHorizontal="12dp"
+							android:paddingTop="12dp"
+							android:paddingBottom="14dp"
+							android:text="明信片信息"
+							android:textStyle="bold"
+							android:textSize="16sp"
+							android:textColor="@color/text_main" />
+
+					<TextView
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginTop="6dp"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginBottom="18dp"
+							android:text="4:3 横版 · 左侧元数据 + 右下简笔线稿主元素 + 6 个方形色块（完整保留主页面当前取色逻辑的色板，按权重排序）。地点与日期已按 EXIF 预填，读不到时留空。"
+							android:textSize="12sp"
+							android:textColor="@color/text_secondary"
+							android:lineSpacingExtra="2dp" />
+
+					<EditText
+							android:id="@+id/etZineTitle"
+							android:layout_marginHorizontal="12dp"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:background="@drawable/bg_edittext_rounded"
+							android:hint="标题（会以大写 + 字距排版）"
+							android:textColor="@color/text_main"
+							android:textColorHint="@color/text_secondary"
+							android:paddingHorizontal="12dp"
+							android:textSize="14sp"
+							android:inputType="text"
+							android:singleLine="true" />
+
+					<EditText
+							android:id="@+id/etZineSubtitle"
+							android:layout_marginHorizontal="12dp"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:background="@drawable/bg_edittext_rounded"
+							android:hint="副标题（可选，斜体）"
+							android:textColor="@color/text_main"
+							android:textColorHint="@color/text_secondary"
+							android:paddingHorizontal="12dp"
+							android:textSize="14sp"
+							android:layout_marginTop="10dp"
+							android:inputType="text"
+							android:singleLine="true" />
+
+					<LinearLayout
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:orientation="horizontal"
+							android:layout_marginHorizontal="12dp"
+							android:weightSum="2"
+							android:layout_marginTop="10dp">
+
+						<EditText
+								android:id="@+id/etZineLocation"
+								android:layout_width="0dp"
+								android:layout_height="48dp"
+								android:layout_weight="1"
+								android:layout_marginEnd="6dp"
+								android:background="@drawable/bg_edittext_rounded"
+								android:hint="LOCATION 地点"
+								android:textColor="@color/text_main"
+								android:textColorHint="@color/text_secondary"
+								android:paddingHorizontal="12dp"
+								android:textSize="13sp"
+								android:singleLine="true" />
+
+						<EditText
+								android:id="@+id/etZineDate"
+								android:layout_width="0dp"
+								android:layout_height="48dp"
+								android:layout_weight="1"
+								android:background="@drawable/bg_edittext_rounded"
+								android:hint="DATE 日期"
+								android:textColor="@color/text_main"
+								android:textColorHint="@color/text_secondary"
+								android:paddingHorizontal="12dp"
+								android:textSize="13sp"
+								android:singleLine="true" />
+					</LinearLayout>
+
+					<EditText
+							android:id="@+id/etZineIndex"
+							android:layout_marginHorizontal="12dp"
+							android:layout_width="match_parent"
+							android:layout_height="48dp"
+							android:background="@drawable/bg_edittext_rounded"
+							android:hint="序号，例如 01"
+							android:text="01"
+							android:textColor="@color/text_main"
+							android:textColorHint="@color/text_secondary"
+							android:paddingHorizontal="12dp"
+							android:textSize="14sp"
+							android:layout_marginTop="10dp"
+							android:inputType="text"
+							android:singleLine="true" />
+
+					<com.google.android.material.switchmaterial.SwitchMaterial
+							android:id="@+id/switchRealityAnchor"
+							android:layout_marginHorizontal="12dp"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:layout_marginTop="14dp"
+							android:checked="false"
+							android:text="增强现实：把原照片嵌入插画"
+							android:textColor="@color/text_main"
+							android:textSize="14sp"
+							android:minHeight="0dp"
+							android:minWidth="0dp"
+							app:switchPadding="4dp" />
+
+					<Button
+							android:id="@+id/btnGenerateZine"
+							android:layout_marginHorizontal="12dp"
+							android:layout_width="match_parent"
+							android:layout_height="50dp"
+							android:layout_marginTop="24dp"
+							android:background="@drawable/btn_primary_rounded"
+							android:text="生成明信片"
+							android:textColor="@color/white"
+							android:textAllCaps="false"
+							android:textStyle="bold" />
+				</LinearLayout>
 			</LinearLayout>
+		</androidx.core.widget.NestedScrollView>
+	</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+</LinearLayout>
 
-			<EditText
-					android:id="@+id/etZineIndex"
-					android:layout_width="match_parent"
-					android:layout_height="48dp"
-					android:background="@drawable/bg_edittext_rounded"
-					android:hint="序号，例如 01"
-					android:text="01"
-					android:textColor="@color/text_main"
-					android:textColorHint="@color/text_secondary"
-					android:paddingHorizontal="12dp"
-					android:textSize="14sp"
-					android:layout_marginTop="10dp"
-					android:inputType="text"
-					android:singleLine="true" />
 
-			<com.google.android.material.switchmaterial.SwitchMaterial
-					android:id="@+id/switchRealityAnchor"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:layout_marginTop="14dp"
-					android:checked="false"
-					android:text="增强现实：把原照片嵌入插画"
-					android:textColor="@color/text_main"
-					android:textSize="14sp"
-					android:minHeight="0dp"
-					android:minWidth="0dp"
-					app:switchPadding="4dp" />
 
-			<Button
-					android:id="@+id/btnGenerateZine"
-					android:layout_width="match_parent"
-					android:layout_height="50dp"
-					android:layout_marginTop="24dp"
-					android:background="@drawable/btn_primary_rounded"
-					android:text="生成明信片"
-					android:textColor="@color/white"
-					android:textAllCaps="false"
-					android:textStyle="bold" />
-		</LinearLayout>
-	</LinearLayout>
-	</androidx.core.widget.NestedScrollView>
-</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+

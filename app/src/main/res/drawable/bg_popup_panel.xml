@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	选择弹窗的面板。
+
+	【不要复用 bg_glass_card。】
+
+	卡片那套玻璃是给"压在背景色雾上"设计的：背景只有渐变色，
+	透上去还是渐变色，很干净。但弹窗压在<b>有内容的页面</b>上——
+	下面是配置卡片、输入框、文字，半透明一透，两行字叠在一起就没法读了。
+
+	苹果那套控制中心面板之所以清楚，是因为它<b>磨砂</b>：
+	背后的东西被糊成色块，文字才有对比。Android 上 PopupWindow 拿不到
+	"背景模糊"（那是 Window 级的能力），所以这里老老实实把不透明度提上去，
+	用 0.94 的实底 + 一圈发丝边，等价于"已经糊好的磨砂"。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+	<item>
+		<shape android:shape="rectangle">
+			<gradient
+					android:angle="270"
+					android:startColor="@color/popup_panel_top"
+					android:centerColor="@color/popup_panel_mid"
+					android:centerY="0.12"
+					android:endColor="@color/popup_panel_bottom" />
+			<corners android:radius="20dp" />
+		</shape>
+	</item>
+
+	<!--
+		下面两层是"看起来像玻璃"的关键——参考实现的液态玻璃也正是靠它们
+		（内阴影对 + 135° 对角高光）。它们不参与透光，只在边上做光，
+		所以既保住了 0.94 的可读性，又和卡片是同一套语言。
+	-->
+	<item>
+		<shape android:shape="rectangle">
+			<gradient
+					android:angle="270"
+					android:startColor="#3DFFFFFF"
+					android:endColor="#00000000" />
+			<corners android:radius="20dp" />
+		</shape>
+	</item>
+	<item>
+		<shape android:shape="rectangle">
+			<gradient
+					android:angle="90"
+					android:startColor="#26000000"
+					android:endColor="#00000000" />
+			<corners android:radius="20dp" />
+		</shape>
+	</item>
+	<item>
+		<shape android:shape="rectangle">
+			<stroke android:width="1dp" android:color="@color/glass_border" />
+			<corners android:radius="20dp" />
+		</shape>
+	</item>
+</layer-list>

@@ -1,19 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+	液态玻璃卡片。
+
+	三个构成，缺一不可：
+
+	  1. 主体 —— 真正半透明（顶 0.72 → 底 0.52），底色里的色雾透得上来。
+	     早先为了修一个色差把它刷到 0.9 以上，玻璃就没了：一层近乎不透明的白，
+	     后面的东西全被盖住，看上去就是块白纸板。
+	  2. 上沿折射高光 —— 一条压在顶边的亮线，两侧各缩进 16dp，
+	     这样直线段不会戳出 24dp 的圆角之外。光是被玻璃"折"进来的那一道。
+	  3. 发丝描边 —— 玻璃的边界。
+
+	关于色差：早先的"两块白"来自「两层全尺寸半透明白 + clipToOutline 离屏层」。
+	这里的高光和描边都只在边缘那一圈，内容区自始至终只有一次上色，
+	所以那个缝不会回来。（卡片现在也不再做 clipToOutline 了。）
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-	<!-- 磨砂玻璃主体：自上而下轻微渐变，模拟受光 -->
+
+	<!-- 1. 玻璃主体 -->
 	<item>
 		<shape android:shape="rectangle">
 			<gradient
 					android:angle="270"
 					android:startColor="@color/glass_card_top"
+					android:centerColor="@color/glass_card_mid"
+					android:centerY="0.10"
 					android:endColor="@color/glass_card_bottom" />
 			<corners android:radius="24dp" />
 		</shape>
 	</item>
-	<!-- 玻璃高光描边 -->
+
+	<!-- 2. 上沿折射高光：只贴在顶边，两侧缩进躲开圆角 -->
+	<item
+			android:gravity="top"
+			android:height="1.5dp"
+			android:left="16dp"
+			android:right="16dp"
+			android:top="1dp">
+		<shape android:shape="rectangle">
+			<solid android:color="@color/glass_highlight" />
+			<corners android:radius="1dp" />
+		</shape>
+	</item>
+
+	<!-- 3. 发丝描边 -->
 	<item>
 		<shape android:shape="rectangle">
-			<solid android:color="@android:color/transparent" />
 			<stroke android:width="1dp" android:color="@color/glass_border" />
 			<corners android:radius="24dp" />
 		</shape>

@@ -12,7 +12,87 @@ public class PosterRenderer {
     private static final int W = 3840;
     private static final int H = 2160;
 
+    /** 成品：4K 全尺寸 */
     public static Bitmap render(Context context, Bitmap photo, List<Integer> rawPalette, Map<String, String> info, String style) {
+        return render(context, photo, rawPalette, info, style, 1f);
+    }
+
+    /**
+     * 按倍数渲染。
+     *
+     * <p>{@code scale} 不是「把版面改小」，而是<b>整块画布等比缩放</b>：
+     * 所有坐标照旧按 4K 的 {@link #W}/{@link #H} 计算，绘制时由 Canvas 的矩阵
+     * 一次性缩下去。版面因此与成品完全一致，而预览只要 1/16 的像素。
+     *
+     * <p>原来的做法是「渲一张 3840×2160（33MB）出来，再缩成 960×540 当预览」——
+     * 相当于为了看一眼缩略图先把整张成品画完。改完之后预览那次渲染
+     * 内存和时间都降到 1/16，而用户点「预览渲染效果」和每次切换取色逻辑
+     * 都会走这条路。
+     *
+     * @param scale 1 = 4K 成品；预览传 0.25 即可
+     */
+    /**
+     * 海报四周至少要留出的空白，占画布宽/高的比例。
+     *
+     * <p>无论照片多宽多长，边缘都留得住这 5%——照片永远贴不到出血线。
+     */
+    private static final float SAFE_MARGIN = 0.05f;
+
+    /**
+     * 照片在画布上的目标尺寸：等比缩放，并保证四周至少留下 {@link #SAFE_MARGIN}。
+     *
+     * <p><b>超长画幅是这里的关键。</b>全景照片（比如 4000×600）按画幅高反推宽度
+     * 会得到 8900px，而画布只有 3840——照片横穿出去、两边被裁掉，
+     * 看上去就像"贴歪了"。所以宽度突破安全区时要按宽度回撤，高度等比跟着降。
+     *
+     * <p>抽成纯函数是为了能直接验：给它一张全景图和一块 4K 画布，
+     * 断言算出来的尺寸一定落在安全区里。
+     *
+     * @param baseH 期望的画幅高（由上下留白反推），会被安全区约束修正
+     * @return {@code {宽, 高}}
+     */
+    static int[] fitPhotoSize(int imgW, int imgH, int baseH, int canvasW, int canvasH) {
+        if (imgW <= 0 || imgH <= 0 || canvasW <= 0 || canvasH <= 0) {
+            return new int[]{1, 1};
+        }
+
+        int targetH = Math.max(1, baseH);
+        int targetW = Math.max(1, (int) ((long) imgW * targetH / imgH));
+
+        int maxW = Math.max(1, Math.round(canvasW * (1f - 2f * SAFE_MARGIN)));
+        int maxH = Math.max(1, Math.round(canvasH * (1f - 2f * SAFE_MARGIN)));
+
+        // 超宽：按宽度回撤，高度等比跟着降
+        if (targetW > maxW) {
+            targetW = maxW;
+            targetH = Math.max(1, (int) ((long) imgH * targetW / imgW));
+        }
+        // 超高：同理（画幅高给小了的时候会走到）
+        if (targetH > maxH) {
+            targetH = maxH;
+            targetW = Math.max(1, (int) ((long) imgW * targetH / imgH));
+        }
+        return new int[]{targetW, targetH};
+    }
+
+    /**
+     * 图片水平居中时的左边距。
+     */
+    static int centeredX(int targetW, int canvasW) {
+        return Math.max(0, (canvasW - targetW) / 2);
+    }
+
+    /**
+     * 图片垂直居中时的上边距。
+     */
+    static int centeredY(int targetH, int canvasH) {
+        return Math.max(0, (canvasH - targetH) / 2);
+    }
+
+    public static Bitmap render(Context context, Bitmap photo, List<Integer> rawPalette,
+                                Map<String, String> info, String style, float scale) {
+        if (scale <= 0f) scale = 1f;
+
         // 1. 颜色顺序调度
         List<Integer> finalPalette = style.equals("马赛克化") ?
                 PosterUtils.getSpatialMapping(photo, rawPalette) :
@@ -21,22 +101,25 @@ public class PosterRenderer {
         // 2. 背景色生成（基于 HSL 排序后的最亮色）
         int bgColor = PosterUtils.getAdaptiveBg(PosterUtils.sortPalette(rawPalette).get(0));
 
-        // 3. 创建画布（预设 4K 分辨率 W=3840, H=2160）[cite: 19]
-        Bitmap canvasBitmap = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888);
+        // 3. 创建画布：按 scale 出图，但坐标系仍是 4K 的
+        int outW = Math.max(1, Math.round(W * scale));
+        int outH = Math.max(1, Math.round(H * scale));
+        Bitmap canvasBitmap = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(canvasBitmap);
+        canvas.scale(scale, scale);
         canvas.drawColor(bgColor);
 
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         boolean isLandscape = photo.getWidth() > photo.getHeight();
 
-        // 4. 执行具体的渲染逻辑（注意：内部子方法也同步去掉了 fontSize 参数）[cite: 19]
+        // 4. 执行具体的渲染逻辑
         if (isLandscape) {
             renderLandscape(context, canvas, photo, finalPalette, info, paint);
         } else {
             renderPortrait(context, canvas, photo, finalPalette, info, paint);
         }
 
-        // --- 5. 新增：绘制 61 像素白色边框 ---
+        // --- 5. 绘制 61 像素白色边框 ---
         drawBorder(canvas);
         return canvasBitmap;
     }
@@ -62,10 +145,15 @@ public class PosterRenderer {
 
     private static void renderLandscape(Context context, Canvas canvas, Bitmap img, List<Integer> palette, Map<String, String> info, Paint paint) {
         // --- 1. 确定照片尺寸 (核心基准) ---
-        int targetH = (int) (H * 0.618f);
-        int targetW = img.getWidth() * targetH / img.getHeight();
+        // 期望画幅高是 H 的 0.618，但超长画幅会被安全区按宽度回撤——
+        // 照片永远留在画布内，四周至少 5%
+        int[] fitted = fitPhotoSize(
+                img.getWidth(), img.getHeight(), (int) (H * 0.618f), W, H);
+        int targetW = fitted[0];
+        int targetH = fitted[1];
+
         Bitmap resized = Bitmap.createScaledBitmap(img, targetW, targetH, true);
-        int imgY = (H - targetH) / 2;
+        int imgY = centeredY(targetH, H);
 
         // --- 2. 确定设备文字规格 (决定全局间距) ---
         String deviceText = getSafeInfo(info, "device", "ILCE-7CM2").toUpperCase();
@@ -211,8 +299,13 @@ public class PosterRenderer {
 
     private static void renderPortrait(Context context, Canvas canvas, Bitmap img, List<Integer> palette, Map<String, String> info, Paint paint) {
         // --- 1. 图像缩放与基础布局 ---
-        int targetH = (int) (H * 0.62);
-        int targetW = img.getWidth() * targetH / img.getHeight();
+        // 和横幅同样走安全区约束：窄长条竖幅（比如 600×4000）反推出来的宽度会很小，
+        // 但一旦超出安全区同样要回撤，规则只写一处
+        int[] fitted = fitPhotoSize(
+                img.getWidth(), img.getHeight(), (int) (H * 0.62f), W, H);
+        int targetW = fitted[0];
+        int targetH = fitted[1];
+
         Bitmap resized = Bitmap.createScaledBitmap(img, targetW, targetH, true);
 
         int gap = 150;

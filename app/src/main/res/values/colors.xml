@@ -65,18 +65,61 @@
 	<!-- ============================================
 		iOS 玻璃拟态 (Glassmorphism) 扩展色（日间）
 	============================================ -->
-	<!-- 玻璃卡片表面（自上而下的轻微渐变，模拟磨砂受光） -->
-	<color name="glass_card_top">#E6FFFFFF</color>
-	<color name="glass_card_bottom">#C4FFFFFF</color>
+	<!--
+		玻璃卡片表面。
+
+		三段而不是两段：顶边那一档（glass_card_top）是玻璃上沿的折射高光，
+		中间那段才是真正的"面"。用 centerY 把高光压在最上面 10%，
+		于是「上沿亮、下面一整片均匀」这件事只靠一个 shape 就表达完了。
+
+		为什么强调"一个 shape"：早先是「渐变底 + 半透明高光」两层叠出来的，
+		两层白在真机 GPU 上合成出了色差——中间内容区亮、四周内边距一圈偏灰，
+		看着就像白色没把内容包进去。少一层，这个缝就不可能出现。
+	-->
+	<color name="glass_card_top">#B8FFFFFF</color>
+	<color name="glass_card_mid">#A8FFFFFF</color>
+	<color name="glass_card_bottom">#8AFFFFFF</color>
 	<!-- 顶部/底部悬浮栏的玻璃表面 -->
-	<color name="glass_bar_top">#F2FFFFFF</color>
-	<color name="glass_bar_bottom">#C9FFFFFF</color>
+	<color name="glass_bar_top">#C4FFFFFF</color>
+	<color name="glass_bar_mid">#B4FFFFFF</color>
+	<color name="glass_bar_bottom">#A0FFFFFF</color>
 	<!-- 玻璃高光描边 -->
-	<color name="glass_border">#3DFFFFFF</color>
-	<color name="glass_highlight">#66FFFFFF</color>
+	<color name="glass_border">#7AFFFFFF</color>
+	<color name="glass_highlight">#B3FFFFFF</color>
+	<!-- 行/按钮的按压涟漪 -->
+	<color name="ripple_tint">#1F2563EB</color>
 	<!-- 页面柔和渐变背景（玻璃的底色氛围） -->
 	<color name="bg_gradient_start">#E7EEF9</color>
 	<color name="bg_gradient_mid">#F4F6FA</color>
 	<color name="bg_gradient_end">#E8F3EE</color>
 	
+	<!-- 背景色雾：玻璃折射的对象 -->
+	<color name="bg_blob_blue">#5C7FA8DD</color>
+	<color name="bg_blob_green">#4D6FBFA0</color>
+	<color name="bg_blob_warm">#4DE0B478</color>
+	<!-- 液态玻璃的整片白玻璃：比卡片底色更透，背景要看得出 -->
+	<color name="glass_liquid_tint">#6BFFFFFF</color>
+	<color name="button_gradient_start">#6E74D6</color>
+	<color name="button_gradient_center">#7A68CE</color>
+	<color name="button_gradient_end">#8B5CC2</color>
+	<color name="button_gradient_start_deep">#5C57B8</color>
+	<color name="button_gradient_center_deep">#6B4EAE</color>
+	<color name="button_gradient_end_deep">#7A449C</color>
+	<!-- 页码点的反差描边：压在蓝按钮上也能看出边界 -->
+	<color name="indicator_halo">#8CFFFFFF</color>
+
+	<!-- ============================================
+		选择弹窗的面板：几乎实底，保证可读性
+	============================================ -->
+	<color name="popup_panel_top">#F7FFFFFF</color>
+	<color name="popup_panel_mid">#F2FFFFFF</color>
+	<color name="popup_panel_bottom">#EDFFFFFF</color>
+
 </resources>
+
+
+
+
+
+
+

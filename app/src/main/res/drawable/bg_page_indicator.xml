@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	页码指示器的底托：只有一圈发丝边，填充是透明的。
+
+	之前这里是实心玻璃 + 6dp elevation。问题是 elevation 会在浅背景上
+	投出一圈灰晕——看上去不是"浮在滑块上"，而是"贴了一张灰纸"。
+	现在去掉投影，填充也去掉：整块就是一圈极淡的轮廓，
+	里面三个点直接透出下面的页面，像悬浮在滑块上。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+	   android:shape="rectangle">
+	<solid android:color="@android:color/transparent" />
+	<stroke android:width="1dp" android:color="@color/glass_border" />
+	<corners android:radius="99dp" />
+</shape>

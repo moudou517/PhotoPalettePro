@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {ExportHistory.class}, version = 3, exportSchema = false)
+@Database(entities = {ExportHistory.class}, version = 4, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;
@@ -25,6 +25,19 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    /**
+     * v3 → v4：新增 filmJson 列（胶片边框配置）。
+     *
+     * <p>同样走正式迁移：老用户的导出历史里没有胶片信息是正常的，
+     * 但海报 / 明信片那几列必须原样留着。
+     */
+    private static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("ALTER TABLE export_history ADD COLUMN filmJson TEXT");
+        }
+    };
+
     public abstract ExportHistoryDao exportHistoryDao();
 
     public static AppDatabase getDatabase(final Context context) {
@@ -33,7 +46,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "photo_palette_pro_db")
-                            .addMigrations(MIGRATION_2_3)
+                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                             // 兜底：以后若漏写迁移，宁可重建也不要闪退
                             .fallbackToDestructiveMigration()
                             .build();

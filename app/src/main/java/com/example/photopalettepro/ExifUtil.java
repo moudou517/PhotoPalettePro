@@ -584,14 +584,18 @@ public class ExifUtil {
 
             // 4. 处理镜头信息 (Lens)
             if (isMobileDevice) {
-                // 手机：强制显示等效焦段
+                // 手机：强制显示等效焦段。
+                //
+                // 这里以前在标签缺失时会退回物理焦距，于是 5mm 的镜头被印成
+                // "LENS 5MM"——那不是镜头的视角，跟眼睛看到的完全对不上。
+                // 现在先自己换算（焦距平面分辨率 → 传感器对角线 → 裁切系数，
+                // 与胶片边框那条路径共用同一套计算），实在算不出来才写
+                // "MOBILE LENS"：宁可不给数字，也不给一个错的。
                 int focal35mm = exif.getAttributeInt(ExifInterface.TAG_FOCAL_LENGTH_IN_35MM_FILM, 0);
-                if (focal35mm > 0) {
-                    info.put("lens", "LENS " + focal35mm + "MM");
-                } else {
-                    double f = exif.getAttributeDouble(ExifInterface.TAG_FOCAL_LENGTH, 0);
-                    info.put("lens", f > 0 ? "LENS " + (int)Math.round(f) + "MM" : "MOBILE LENS");
+                if (focal35mm <= 0) {
+                    focal35mm = derivedEquivalentFocal(exif);
                 }
+                info.put("lens", focal35mm > 0 ? "LENS " + focal35mm + "MM" : "MOBILE LENS");
             } else {
                 // 相机：显示原始镜头型号
                 info.put("lens", (rawLens != null && !rawLens.trim().isEmpty()) ? rawLens : "Unknown Lens");
@@ -642,6 +646,199 @@ public class ExifUtil {
             e.printStackTrace();
         }
         return info;
+    }
+
+    /**
+     * 胶片边框的片边文字：只取「照片里真的有」的拍摄参数。
+     *
+     * <p>与 {@link #getPhotoInfo} 的关键差别是<b>不做任何默认值兜底</b>。
+     * getPhotoInfo 为了让海报的信息栏永远不空，读不到时会写
+     * {@code Unknown Device} / {@code 1/100s} / {@code f/2.8} / {@code ISO 100}；
+     * 这些兜底值一旦印到胶片上就是<b>伪造的拍摄参数</b>，所以这里读不到就返回空串，
+     * 由 {@link com.example.photopalettepro.FilmBorderConfig} 决定回落到哪句装饰文案。
+     *
+     * @return 长度固定为 4 的数组：{机身, 镜头, 曝光组合, 日期}；读不到的项为空串
+     */
+    public static String[] getFilmEdgeInfo(Context context, Uri uri) {
+        String[] edge = {"", "", "", ""};
+        if (context == null || uri == null) return edge;
+
+        try (InputStream is = context.getContentResolver().openInputStream(uri)) {
+            if (is == null) return edge;
+            ExifInterface exif = new ExifInterface(is);
+
+            // 1. 机身：走同一个 500+ 型号映射表，但没拿到型号就留空
+            String rawMake = exif.getAttribute(ExifInterface.TAG_MAKE);
+            String rawModel = exif.getAttribute(ExifInterface.TAG_MODEL);
+            if (rawModel != null && !rawModel.trim().isEmpty()) {
+                edge[0] = mapModelName(rawMake, rawModel);
+            }
+
+            // 2. 镜头
+            //    手机必须走「等效焦段」，与主页面（取色那一页）的机身信息栏同一套判断：
+            //    EXIF 里的 FocalLength 是 5~7mm 的物理焦距，直接印出来会被读成
+            //    5mm 超广角，跟眼睛看到的视角完全对不上。
+            //    真相机则相反——原始镜头型号（FE 50MM F1.8）比一个等效数字信息量大得多。
+            String rawLens = exif.getAttribute(ExifInterface.TAG_LENS_MODEL);
+            if (isMobile(rawMake, rawModel)) {
+                edge[1] = mobileLensLabel(exif);
+            } else if (rawLens != null && !rawLens.trim().isEmpty()) {
+                edge[1] = rawLens.trim();
+            }
+
+            // 3. 曝光组合
+            edge[2] = buildExposureText(exif);
+
+            // 4. 日期
+            String rawDate = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL);
+            if (rawDate == null || rawDate.trim().isEmpty()) {
+                rawDate = exif.getAttribute(ExifInterface.TAG_DATETIME);
+            }
+            edge[3] = formatExifDate(rawDate);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return edge;
+    }
+
+    /**
+     * 只把真的存在的曝光参数拼成 {@code 1/200s · f/1.8 · ISO400}。
+     * 三个标签一个都没有时返回空串——不编造。
+     */
+    private static String buildExposureText(ExifInterface exif) {
+        StringBuilder sb = new StringBuilder();
+
+        double exposureTime = exif.getAttributeDouble(ExifInterface.TAG_EXPOSURE_TIME, 0);
+        if (exposureTime > 0) {
+            if (exposureTime >= 1.0) {
+                sb.append(numberText(exposureTime)).append("s");
+            } else {
+                sb.append("1/").append((int) Math.round(1.0 / exposureTime)).append("s");
+            }
+        }
+
+        double fNumber = exif.getAttributeDouble(ExifInterface.TAG_F_NUMBER, 0);
+        if (fNumber > 0) {
+            appendPart(sb, "f/" + numberText(fNumber));
+        }
+
+        String iso = exif.getAttribute(ExifInterface.TAG_ISO_SPEED_RATINGS);
+        if (iso == null || iso.trim().isEmpty()) {
+            iso = exif.getAttribute(ExifInterface.TAG_PHOTOGRAPHIC_SENSITIVITY);
+        }
+        if (iso != null && !iso.trim().isEmpty()) {
+            appendPart(sb, "ISO" + iso.trim());
+        }
+
+        return sb.toString();
+    }
+
+    private static void appendPart(StringBuilder sb, String part) {
+        if (sb.length() > 0) sb.append(" · ");
+        sb.append(part);
+    }
+
+    /** 整数就不带小数点：2.0 → "2"，1.8 → "1.8"。 */
+    private static String numberText(double value) {
+        if (value == Math.floor(value) && !Double.isInfinite(value)) {
+            return String.valueOf((long) value);
+        }
+        return String.valueOf(Math.round(value * 10.0) / 10.0);
+    }
+
+    // ============================================================
+    //  手机的等效焦段换算
+    // ============================================================
+
+    /** 35mm 画幅（36×24mm）的对角线长度，等效焦段的换算基准。 */
+    static final double FULL_FRAME_DIAGONAL_MM = 43.266;
+
+    /** 传感器对角线的合理区间：1/3" 手机小底 ≈ 5.6mm，中画幅 645 ≈ 55mm，超出即认定反推失败。 */
+    private static final double MIN_SENSOR_DIAGONAL_MM = 3.0;
+    private static final double MAX_SENSOR_DIAGONAL_MM = 60.0;
+
+    /**
+     * 手机的镜头标签：一律给 35mm 等效焦段。
+     *
+     * <p>两条路，按可靠性排序：
+     * <ol>
+     *   <li>直接读 {@code FocalLengthIn35mmFilm}——手机基本都会写，这也是主页面在用的值；</li>
+     *   <li>标签缺失时，用焦距平面分辨率反推传感器对角线、算出裁切系数再乘回物理焦距。</li>
+     * </ol>
+     *
+     * <p>两条都走不通就返回空串：<b>宁可不显示，也不把 5mm 的物理焦距当成
+     * 镜头真实视角印到胶片上</b>。空串会让 {@code FilmBorderConfig} 回落到装饰文案。
+     */
+    private static String mobileLensLabel(ExifInterface exif) {
+        int focal35mm = exif.getAttributeInt(ExifInterface.TAG_FOCAL_LENGTH_IN_35MM_FILM, 0);
+        if (focal35mm <= 0) {
+            focal35mm = derivedEquivalentFocal(exif);
+        }
+        return focal35mm > 0 ? "LENS " + focal35mm + "MM" : "";
+    }
+
+    /** 从 EXIF 里凑齐物理焦距与传感器尺寸，算出等效焦段；凑不齐返回 0。 */
+    private static int derivedEquivalentFocal(ExifInterface exif) {
+        double physical = exif.getAttributeDouble(ExifInterface.TAG_FOCAL_LENGTH, 0);
+        if (physical <= 0) return 0;
+
+        double planeX = exif.getAttributeDouble(ExifInterface.TAG_FOCAL_PLANE_X_RESOLUTION, 0);
+        double planeY = exif.getAttributeDouble(ExifInterface.TAG_FOCAL_PLANE_Y_RESOLUTION, 0);
+        int unit = exif.getAttributeInt(ExifInterface.TAG_FOCAL_PLANE_RESOLUTION_UNIT, 0);
+
+        int widthPx = firstPositive(
+                exif.getAttributeInt(ExifInterface.TAG_PIXEL_X_DIMENSION, 0),
+                exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0));
+        int heightPx = firstPositive(
+                exif.getAttributeInt(ExifInterface.TAG_PIXEL_Y_DIMENSION, 0),
+                exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0));
+
+        double diagonal = sensorDiagonalMm(planeX, planeY, unit, widthPx, heightPx);
+        return equivalentFocalLength(physical, diagonal);
+    }
+
+    private static int firstPositive(int a, int b) {
+        return a > 0 ? a : b;
+    }
+
+    /**
+     * 由焦距平面分辨率反推传感器对角线长度（mm）。
+     *
+     * <p>{@code FocalPlaneXResolution} 的含义是「每单位长度上有多少个像素」，
+     * 单位由 {@code FocalPlaneResolutionUnit} 给出（2 = 英寸，3 = 厘米）。于是：
+     * <pre>
+     *   传感器宽度 = 图像宽度像素数 ÷ (FocalPlaneXResolution ÷ 每单位毫米数)
+     * </pre>
+     * 高度同理，最后取对角线。
+     *
+     * @return 对角线长度（mm）；参数不可用、单位不认识、或结果落在合理区间之外时返回 0
+     */
+    static double sensorDiagonalMm(double planeXRes, double planeYRes, int unit,
+                                   int imageWidthPx, int imageHeightPx) {
+        if (planeXRes <= 0 || planeYRes <= 0 || imageWidthPx <= 0 || imageHeightPx <= 0) return 0;
+        // 只认英寸和厘米；单位不认识时一律不猜，否则会算出一个离谱的裁切系数
+        if (unit != 2 && unit != 3) return 0;
+
+        double unitMm = (unit == 3) ? 10.0 : 25.4;
+        double sensorWidth = imageWidthPx * unitMm / planeXRes;
+        double sensorHeight = imageHeightPx * unitMm / planeYRes;
+
+        double diagonal = Math.hypot(sensorWidth, sensorHeight);
+        if (diagonal < MIN_SENSOR_DIAGONAL_MM || diagonal > MAX_SENSOR_DIAGONAL_MM) return 0;
+        return diagonal;
+    }
+
+    /**
+     * 等效焦段 = 物理焦距 × 裁切系数，其中裁切系数 = 全画幅对角线 ÷ 传感器对角线。
+     *
+     * @return 四舍五入后的等效焦距（mm）；参数不可用或结果不合理时返回 0
+     */
+    static int equivalentFocalLength(double physicalMm, double sensorDiagonalMm) {
+        if (physicalMm <= 0 || sensorDiagonalMm <= 0) return 0;
+        int equivalent = (int) Math.round(physicalMm * FULL_FRAME_DIAGONAL_MM / sensorDiagonalMm);
+        // 手机主摄等效焦段通常 13~120mm，超过 1200mm 只可能是算错了
+        return (equivalent < 5 || equivalent > 1200) ? 0 : equivalent;
     }
 
     /**

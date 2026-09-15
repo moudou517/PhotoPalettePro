@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	设置行的按压反馈。
+
+	只有涟漪、没有静止态底色：行本身保持透明，
+	于是不会在玻璃卡片上再切出一块方形色斑——
+	「白色里嵌着一块方形的灰」正是要避免的那种观感。
+	涟漪本身是圆角的、有边界的，不会溢出到卡片圆角之外。
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+		android:color="@color/ripple_tint">
+	<item android:id="@android:id/mask">
+		<shape android:shape="rectangle">
+			<solid android:color="@color/white" />
+			<corners android:radius="14dp" />
+		</shape>
+	</item>
+</ripple>

@@ -34,9 +34,13 @@ public class ExportHistory {
     // 用于再次导入同一张照片时恢复上次填写的明信片内容
     public String zineJson;
 
+    // 新增：胶片边框配置（JSON：style / width / 齿孔开关 / 片边文字）
+    // 用于再次导入同一张（批）照片时恢复上次的胶片设置
+    public String filmJson;
+
     public ExportHistory(String originalUri, String optionsJson, String sign, String outputPath, long timestamp,
                          String device, String lens, String shutter, String aperture, String iso,
-                         String zineJson) {
+                         String zineJson, String filmJson) {
         this.originalUri = originalUri;
         this.optionsJson = optionsJson;
         this.sign = sign;
@@ -48,5 +52,6 @@ public class ExportHistory {
         this.aperture = aperture;
         this.iso = iso;
         this.zineJson = zineJson;
+        this.filmJson = filmJson;
     }
 }

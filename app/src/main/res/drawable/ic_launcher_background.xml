@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    应用图标背景：柔和的冷白。
+
+    ⚠️ 不要把"网格线的颜色"做在这一层。
+
+    曾经试过把这里改成中灰，指望色块之间的缝露出灰色 = 灰网格线。
+    结果前景一旦没铺满（缩放层没生效），整圈背景就变成一个大灰框。
+    网格线现在由前景【显式画成灰色细矩形】，和这一层解耦。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:aapt="http://schemas.android.com/aapt"
+        android:width="108dp"
+        android:height="108dp"
+        android:viewportWidth="108"
+        android:viewportHeight="108">
+
+    <path android:pathData="M0,0 h108 v108 h-108 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                    android:type="linear"
+                    android:startX="0" android:startY="0"
+                    android:endX="0" android:endY="108"
+                    android:startColor="#FAFAFD"
+                    android:endColor="#E9EAF3" />
+        </aapt:attr>
+    </path>
+</vector>
+

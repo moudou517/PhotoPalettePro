@@ -22,4 +22,15 @@
 		<item name="android:textColorHint">@color/hint_text</item>
 		<item name="android:backgroundTint">@color/input_focus</item>
 	</style>
+
+	<!--
+		4. 选择弹窗的出现/消失动画。
+
+		做成「贴着触发那一行长出来」而不是淡入淡出：锚点在下方，
+		从锚点方向展开才读得出「这是这一行的选项」。
+	-->
+	<style name="PopupAnimation" parent="@android:style/Animation.Dialog">
+		<item name="android:windowEnterAnimation">@anim/popup_enter</item>
+		<item name="android:windowExitAnimation">@anim/popup_exit</item>
+	</style>
 </resources>

@@ -7,13 +7,18 @@
 			 android:fitsSystemWindows="true"
 			 tools:context=".MainActivity">
 
-	<!-- 全屏磨砂背景：导入照片后显示模糊照片，营造 iOS 玻璃氛围 -->
+	<!--
+		全屏磨砂背景：导入照片后显示模糊照片，营造 iOS 玻璃氛围。
+
+		alpha 从 0.45 提到 0.58：太淡的话，透过卡片的只剩一层灰，
+		玻璃的"折射"就没有对象了——卡片看上去又是一块白板。
+	-->
 	<ImageView
 			android:id="@+id/bgPhotoBackdrop"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:scaleType="centerCrop"
-			android:alpha="0.45"
+			android:alpha="0.58"
 			android:importantForAccessibility="no" />
 
 	<LinearLayout
@@ -23,6 +28,7 @@
 
 		<!-- 顶部悬浮玻璃栏 -->
 		<RelativeLayout
+				android:id="@+id/topGlassBar"
 				android:layout_width="match_parent"
 				android:layout_height="56dp"
 				android:layout_marginTop="12dp"
@@ -42,38 +48,39 @@
 					android:focusable="true" />
 		</RelativeLayout>
 
-		<!-- 翻页切换：第 1 页 = 摄影海报，第 2 页 = Zine 明信片 -->
-		<androidx.viewpager2.widget.ViewPager2
-				android:id="@+id/vpModes"
+		<!--
+			翻页切换：以第 2 页（摄影海报）为默认落点，向两侧分开两类功能——
+			  往左滑（第 3 页）＝ 胶片边框，与取色逻辑无关的独立工具；
+			  往右滑（第 1 页）＝ Zine 明信片，需要接着用主页面的取色逻辑。
+
+			外面套的 SwipeWatchLayout 只旁观手势、不拦截任何事件：
+			胶片页选入多张时要锁死翻页，而锁死之后 ViewPager2 不再处理触摸，
+			得靠这一层才知道「用户试图翻页」，从而弹窗说明原因。
+		-->
+		<com.example.photopalettepro.helper.SwipeWatchLayout
+				android:id="@+id/swipeWatch"
 				android:layout_width="match_parent"
 				android:layout_height="0dp"
-				android:layout_weight="1" />
+				android:layout_weight="1">
 
-		<!-- 翻页指示点 -->
-		<LinearLayout
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:orientation="horizontal"
-				android:gravity="center"
-				android:paddingTop="10dp"
-				android:paddingBottom="6dp">
+			<androidx.viewpager2.widget.ViewPager2
+					android:id="@+id/vpModes"
+					android:layout_width="match_parent"
+					android:layout_height="match_parent" />
+		</com.example.photopalettepro.helper.SwipeWatchLayout>
 
-			<View
-					android:id="@+id/dotMode0"
-					android:layout_width="8dp"
-					android:layout_height="8dp"
-					android:background="@drawable/indicator_dot_on" />
+		<!--
+			翻页指示：一块【独立悬浮】的胶囊，压在滑块模块之上。
 
-			<View
-					android:id="@+id/dotMode1"
-					android:layout_width="8dp"
-					android:layout_height="8dp"
-					android:layout_marginStart="8dp"
-					android:background="@drawable/indicator_dot_off" />
-		</LinearLayout>
+			它不再属于垂直排布里的任何一段——那样不管怎么加间距，
+			它和底部模块都还在同一条链上，读起来是一块东西。
+			现在它移到根布局里，位置由代码算（贴着底栏上沿往上抬一点），
+			周边就是页面本身，纯透明。
+		-->
 
 		<!-- 底部悬浮玻璃栏（导入 / 保存 为两种模式共用） -->
 		<LinearLayout
+				android:id="@+id/bottomGlassBar"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:orientation="horizontal"
@@ -108,4 +115,40 @@
 					android:textSize="16sp" />
 		</LinearLayout>
 	</LinearLayout>
+		<LinearLayout
+				android:id="@+id/pageIndicator"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="bottom|center_horizontal"
+				android:layout_marginBottom="118dp"
+				android:orientation="horizontal"
+				android:gravity="center"
+				android:background="@drawable/bg_page_indicator"
+				android:paddingHorizontal="10dp"
+				android:paddingVertical="7dp">
+
+			<View
+					android:id="@+id/dotMode0"
+					android:layout_width="11dp"
+					android:layout_height="11dp"
+					android:background="@drawable/indicator_dot_off" />
+
+			<View
+					android:id="@+id/dotMode1"
+					android:layout_width="11dp"
+					android:layout_height="11dp"
+					android:layout_marginStart="8dp"
+					android:background="@drawable/indicator_dot_on" />
+
+			<View
+					android:id="@+id/dotMode2"
+					android:layout_width="11dp"
+					android:layout_height="11dp"
+					android:layout_marginStart="8dp"
+					android:background="@drawable/indicator_dot_off" />
+		</LinearLayout>
 </FrameLayout>
+
+
+
+

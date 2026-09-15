@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-	   android:shape="oval">
-	<solid android:color="@color/text_secondary" />
-	<size android:width="7dp" android:height="7dp" />
-</shape>
+<!--
+	非当前页的点：同样带一圈反差描边，只是本体更小、更淡。
+	（描边的用意见 indicator_dot_on.xml）
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+	<item>
+		<shape android:shape="oval">
+			<solid android:color="@android:color/transparent" />
+			<stroke android:width="1.5dp" android:color="@color/indicator_halo" />
+			<size android:width="11dp" android:height="11dp" />
+		</shape>
+	</item>
+	<item
+			android:left="3dp"
+			android:top="3dp"
+			android:right="3dp"
+			android:bottom="3dp">
+		<shape android:shape="oval">
+			<solid android:color="@color/text_secondary" />
+		</shape>
+	</item>
+</layer-list>

@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+	页面底色的<b>兜底</b>：只画渐变。
+
+	真正带色雾的那层由 {@code BackdropDrawable} 在 onCreate 里铺到根布局上
+	（色雾要按屏幕比例定位、还要有软到看不见的衰减，XML 表达不了，详见那个类）。
+	这份留着是给主题的 windowBackground 用——窗口起来到 onCreate 之间那一瞬
+	不该是白的。
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
 	   android:shape="rectangle">
-	<!-- 柔和的三段式氛围渐变：为玻璃卡片提供通透的背景层次 -->
 	<gradient
 			android:angle="270"
 			android:startColor="@color/bg_gradient_start"

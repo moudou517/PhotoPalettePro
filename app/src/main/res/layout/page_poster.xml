@@ -23,7 +23,7 @@
 				android:layout_height="0dp"
 				android:scaleType="centerCrop"
 				android:contentDescription="照片预览区域"
-				app:layout_constraintDimensionRatio="16:9"
+				app:layout_constraintDimensionRatio="4:3"
 				app:layout_constraintStart_toStartOf="parent"
 				app:layout_constraintEnd_toEndOf="parent"
 				app:layout_constraintTop_toTopOf="parent" />
@@ -59,6 +59,17 @@
 					android:orientation="vertical"
 					android:paddingBottom="12dp">
 
+				<!--
+					配置卡片。
+
+					卡片内边距只留 8dp，把「视觉留白」交给每一行自己的 12dp 内边距——
+					这样：
+					  · 每一行的涟漪是圆角、有边界的，缩在卡片圆角之内，不会切出一块方形色斑；
+					  · 分割线用同样的 12dp 缩进，和文字左对齐，不会有线跑到卡片外面去的观感；
+					  · 输入框的文字（8 + 12）和设置行的文字（8 + 12）落在同一条竖线上。
+					以前是「卡片 20dp 内边距 + 行没有自己的表面」，行的可点区域和
+					卡片留白对不齐，看上去就像白色没有把内容包住。
+				-->
 				<LinearLayout
 						android:id="@+id/configCard"
 						android:layout_width="match_parent"
@@ -66,7 +77,7 @@
 						android:orientation="vertical"
 						android:layout_marginHorizontal="12dp"
 						android:layout_marginTop="12dp"
-						android:padding="20dp"
+						android:padding="8dp"
 						android:background="@drawable/bg_glass_card"
 						android:elevation="2dp">
 
@@ -77,67 +88,109 @@
 							android:textStyle="bold"
 							android:textSize="16sp"
 							android:textColor="@color/text_main"
-							android:layout_marginBottom="20dp" />
+							android:paddingHorizontal="12dp"
+							android:paddingTop="12dp"
+							android:paddingBottom="14dp" />
 
 					<LinearLayout
 							android:id="@+id/containerSelectMode"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
-							android:orientation="vertical"
+							android:orientation="horizontal"
+							android:gravity="center_vertical"
+							android:background="@drawable/bg_row_selectable"
 							android:clickable="true"
 							android:focusable="true"
-							android:paddingVertical="8dp">
-						<TextView
-								android:id="@+id/tvCurrentMode"
-								android:layout_width="wrap_content"
+							android:paddingHorizontal="12dp"
+							android:paddingVertical="12dp">
+
+						<LinearLayout
+								android:layout_width="0dp"
 								android:layout_height="wrap_content"
-								android:text="默认渲染"
-								android:textSize="17sp"
-								android:textColor="@color/text_main" />
-						<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="取色逻辑"
-								android:textSize="13sp"
-								android:textColor="@color/text_secondary"
-								android:layout_marginTop="2dp" />
+								android:layout_weight="1"
+								android:orientation="vertical">
+
+							<TextView
+									android:id="@+id/tvCurrentMode"
+									android:layout_width="wrap_content"
+									android:layout_height="wrap_content"
+									android:text="标准取色"
+									android:textSize="17sp"
+									android:textColor="@color/text_main" />
+
+							<TextView
+									android:id="@+id/tvModeHint"
+									android:layout_width="wrap_content"
+									android:layout_height="wrap_content"
+									android:text="取色逻辑"
+									android:textSize="13sp"
+									android:textColor="@color/text_secondary"
+									android:layout_marginTop="2dp" />
+						</LinearLayout>
+
+						<ImageView
+								android:layout_width="18dp"
+								android:layout_height="18dp"
+								android:src="@drawable/ic_chevron_right"
+								android:importantForAccessibility="no" />
 					</LinearLayout>
 
 					<View
 							android:layout_width="match_parent"
 							android:layout_height="0.5dp"
 							android:background="@color/divider_color"
-							android:layout_marginVertical="8dp"/>
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginVertical="2dp" />
 
 					<LinearLayout
 							android:id="@+id/containerSelectStyle"
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
-							android:orientation="vertical"
+							android:orientation="horizontal"
+							android:gravity="center_vertical"
+							android:background="@drawable/bg_row_selectable"
 							android:clickable="true"
 							android:focusable="true"
-							android:paddingVertical="8dp">
-						<TextView
-								android:id="@+id/tvCurrentStyle"
-								android:layout_width="wrap_content"
+							android:paddingHorizontal="12dp"
+							android:paddingVertical="12dp">
+
+						<LinearLayout
+								android:layout_width="0dp"
 								android:layout_height="wrap_content"
-								android:text="默认格式"
-								android:textSize="17sp"
-								android:textColor="@color/text_main" />
-						<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="排列方式"
-								android:textSize="13sp"
-								android:textColor="@color/text_secondary"
-								android:layout_marginTop="2dp" />
+								android:layout_weight="1"
+								android:orientation="vertical">
+
+							<TextView
+									android:id="@+id/tvCurrentStyle"
+									android:layout_width="wrap_content"
+									android:layout_height="wrap_content"
+									android:text="常规排版"
+									android:textSize="17sp"
+									android:textColor="@color/text_main" />
+
+							<TextView
+									android:layout_width="wrap_content"
+									android:layout_height="wrap_content"
+									android:text="排列方式"
+									android:textSize="13sp"
+									android:textColor="@color/text_secondary"
+									android:layout_marginTop="2dp" />
+						</LinearLayout>
+
+						<ImageView
+								android:layout_width="18dp"
+								android:layout_height="18dp"
+								android:src="@drawable/ic_chevron_right"
+								android:importantForAccessibility="no" />
 					</LinearLayout>
 
 					<View
 							android:layout_width="match_parent"
 							android:layout_height="1dp"
 							android:background="@color/divider_color"
-							android:layout_marginVertical="20dp"/>
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="12dp"
+							android:layout_marginBottom="16dp" />
 
 					<TextView
 							android:layout_width="wrap_content"
@@ -145,7 +198,8 @@
 							android:text="机身与镜头信息"
 							android:textStyle="bold"
 							android:textSize="14sp"
-							android:textColor="@color/text_main" />
+							android:textColor="@color/text_main"
+							android:paddingHorizontal="12dp" />
 
 					<EditText
 							android:id="@+id/etDevice"
@@ -157,6 +211,7 @@
 							android:textColorHint="@color/text_secondary"
 							android:paddingHorizontal="12dp"
 							android:textSize="14sp"
+							android:layout_marginHorizontal="12dp"
 							android:layout_marginTop="10dp"
 							android:inputType="text"
 							android:singleLine="true" />
@@ -171,6 +226,7 @@
 							android:textColorHint="@color/text_secondary"
 							android:paddingHorizontal="12dp"
 							android:textSize="14sp"
+							android:layout_marginHorizontal="12dp"
 							android:layout_marginTop="10dp"
 							android:inputType="text"
 							android:singleLine="true" />
@@ -180,6 +236,7 @@
 							android:layout_height="wrap_content"
 							android:orientation="horizontal"
 							android:weightSum="3"
+							android:layout_marginHorizontal="12dp"
 							android:layout_marginTop="10dp">
 						<EditText android:id="@+id/etShutter" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:background="@drawable/bg_edittext_rounded" android:hint="快门" android:textColor="@color/text_main" android:textColorHint="@color/text_secondary" android:paddingHorizontal="8dp" android:textSize="13sp" android:layout_marginEnd="6dp" android:singleLine="true" />
 						<EditText android:id="@+id/etAperture" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:background="@drawable/bg_edittext_rounded" android:hint="光圈" android:textColor="@color/text_main" android:textColorHint="@color/text_secondary" android:paddingHorizontal="8dp" android:textSize="13sp" android:layout_marginEnd="6dp" android:singleLine="true" />
@@ -189,6 +246,7 @@
 					<LinearLayout
 							android:layout_width="match_parent"
 							android:layout_height="wrap_content"
+							android:layout_marginHorizontal="12dp"
 							android:layout_marginTop="10dp"
 							android:gravity="center_vertical"
 							android:orientation="horizontal"
@@ -228,7 +286,8 @@
 							android:id="@+id/btnGeneratePreview"
 							android:layout_width="match_parent"
 							android:layout_height="50dp"
-							android:layout_marginTop="24dp"
+							android:layout_marginHorizontal="12dp"
+							android:layout_marginTop="20dp"
 							android:background="@drawable/btn_primary_rounded"
 							android:text="预览渲染效果"
 							android:textColor="@color/white"
@@ -239,3 +298,5 @@
 		</androidx.core.widget.NestedScrollView>
 	</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>
+
+

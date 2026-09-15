@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+	主按钮：蓝紫渐变。
+
+	315°（左上 → 右下），中间垫一档靛蓝——纯两段渐变会显得"塑料"，
+	中间那档让过渡像光在表面上扫过去。
+	圆角 25dp：52dp 高的按钮正好是一条胶囊。
+-->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-		android:color="#E5E7EB">
-	<!-- 日间模式按钮：品牌蓝色 -->
+		android:color="#33FFFFFF">
 	<item>
 		<shape android:shape="rectangle">
-			<!-- Apple风格的深蓝按钮 -->
-			<solid android:color="#007AFF" />
+			<gradient
+					android:angle="315"
+					android:startColor="@color/button_gradient_start"
+					android:centerColor="@color/button_gradient_center"
+					android:endColor="@color/button_gradient_end" />
 			<corners android:radius="25dp" />
 		</shape>
 	</item>
 </ripple>
-
