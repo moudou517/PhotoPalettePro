@@ -17,3 +17,5 @@ local.properties
 # 系统
 .DS_Store
 Thumbs.db
+# IDE 插件配置（不要入库）
+.continue/

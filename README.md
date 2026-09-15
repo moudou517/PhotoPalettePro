@@ -1064,3 +1064,39 @@ com.example.photopalettepro/
 用正则把 `static` 提升为 `public static` 时，**静态初始化块** `static { … }`
 也被改成了 `public static { … }` —— 非法语法，编译直接报
 「非法的类型开始」。**处理**：正则加行尾 `{` 的排除，改完必须编译验证。
+
+---
+
+## 仓库导航
+
+### 根目录
+
+| 文件 | 说明 |
+|---|---|
+| `README.md` | 主文档（本文件）：功能、设计决策、踩过的坑 |
+| `docs/` | 历史文档：配色参考、迁移清单、模块化指南、夜间模式设计、优化总结、v2.0 发布说明 |
+| `tools/run-unit-tests.ps1` | **开发工具**，不是应用代码 |
+| `gradlew` / `gradlew.bat` / `gradle/` | Gradle wrapper |
+
+`local.properties`（本机 SDK 路径）和 `build/`、`.gradle/`、`.idea/` 都在 `.gitignore` 里，**不入库**。
+
+### `tools/run-unit-tests.ps1` 是干什么的
+
+它**不是应用的一部分**，是给开发环境用的：某些受限环境下 Gradle 的 test worker
+起不来（共享内存 / 进程创建被限制），直接跑 `:app:testDebugUnitTest` 会失败。
+这个脚本绕过 Gradle，用 `java + org.junit.runner.JUnitCore` 直接执行同一批用例：
+
+```powershell
+pwsh -File tools/run-unit-tests.ps1
+```
+
+它会自动发现 `app/src/test/java/**/*Test.java`，所以**加了新测试类不用改脚本**
+（早期版本写死了测试类列表，结果新加的三个测试类被静默跳过）。
+
+**不需要它的话可以整个删掉**，不影响 App 构建和发布。
+
+### 构建
+
+```bash
+./gradlew :app:assembleDebug        # 产物 app/build/outputs/apk/debug/app-debug.apk
+```
